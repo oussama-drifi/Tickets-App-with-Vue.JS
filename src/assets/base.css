@@ -2,10 +2,11 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-body {
   font-family: poppins, Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f5f5f5;
-  color: #333;
-  min-height: 100vh;
+}
+:root {
+  --primary-color: #FA8029;
+  --dark-color: #1F2424;
+  --light-color: #F7F7F7;
+  --white-color: #FFFFFF;
 }
