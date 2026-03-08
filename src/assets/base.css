@@ -5,8 +5,25 @@
   font-family: poppins, Tahoma, Geneva, Verdana, sans-serif;
 }
 :root {
-  --primary-color: #FA8029;
-  --dark-color: #1F2424;
-  --light-color: #F7F7F7;
-  --white-color: #FFFFFF;
+  --primary: #FA8029;
+  --primary-hover: #E0721F;
+  --bg: #F7F7F7;
+  --surface: #FFFFFF;
+  --text: #282625;
+  --text-muted: #353535;
+  --border: #EEEEEE;
+  --danger: #EF4444;
+  --success: #22C55E;
+}
+
+[data-theme="dark"] {
+  --primary: #FA8029;
+  --primary-hover: #d06b1e;
+  --bg: #181818;
+  --surface: #212121;
+  --text: #F7F7F7;
+  --text-muted: #e8e8e8;
+  --border: #454545;
+  --danger: #F87171;
+  --success: #4ADE80;
 }
