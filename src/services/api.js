@@ -1,21 +1,57 @@
-const BASE_URL = '/api'
+const ADMIN_URL = '/api/admin'
+const COMMERCIAL_URL = '/api/commercials'
+const AUTH_URL = '/api/auth'
 
-async function request(endpoint, options = {}) {
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options
-  })
+function getToken() {
+  return localStorage.getItem('token')
+}
 
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status}`)
+async function request(url, options = {}) {
+  const token = getToken()
+  const headers = { ...options.headers }
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
   }
 
+  // Only set Content-Type to JSON if body is not FormData
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json'
+  }
+
+  const response = await fetch(url, { ...options, headers })
+
+  if (!response.ok) {
+    await new Promise(res => setTimeout(res, 5000))
+    const body = await response.json().catch(() => null)
+    throw new Error(body?.error || `API error: ${response.status}`)
+  }
+
+  await new Promise(res => setTimeout(res, 5000))
   return response.json()
 }
 
-export const api = {
-  get: (endpoint) => request(endpoint),
-  post: (endpoint, data) => request(endpoint, { method: 'POST', body: JSON.stringify(data) }),
-  put: (endpoint, data) => request(endpoint, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (endpoint) => request(endpoint, { method: 'DELETE' })
+function createClient(baseURL) {
+  return {
+    get: (endpoint, options = {}) => request(`${baseURL}${endpoint}`, options),
+
+    post: (endpoint, data, options = {}) =>
+      request(`${baseURL}${endpoint}`, {
+        method: 'POST',
+        body: data instanceof FormData ? data : JSON.stringify(data),
+        ...options
+      }),
+    put: (endpoint, data, options = {}) =>
+      request(`${baseURL}${endpoint}`, {
+        method: 'PUT',
+        body: data instanceof FormData ? data : JSON.stringify(data),
+        ...options
+      }),
+    delete: (endpoint, options = {}) =>
+      request(`${baseURL}${endpoint}`, { method: 'DELETE', ...options })
+  }
 }
+
+export const adminApi = createClient(ADMIN_URL)
+export const commercialApi = createClient(COMMERCIAL_URL)
+export const authApi = createClient(AUTH_URL)
