@@ -12,7 +12,6 @@ export const useCommercialsStore = defineStore('commercials', () => {
     error.value = null
     try {
       commercials.value = await adminApi.get('/commercials')
-      console.log(commercials.value)
     } catch (err) {
       error.value = err.message
     } finally {

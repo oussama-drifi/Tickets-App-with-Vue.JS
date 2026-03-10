@@ -1,9 +1,9 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import { useCommercialsStore } from '@/stores/commercials'
 import { storeToRefs } from 'pinia'
-import Commercial from '@/components/common/Commercial.vue'
-import CommercialsSkeleton from './CommercialsSkeleton.vue'
+import CommercialCard from '@/components/commercials/CommercialCard.vue'
+import CommercialsSkeleton from '@/components/commercials/CommercialsSkeleton.vue'
 
 const commercialsStore = useCommercialsStore()
 
@@ -24,8 +24,8 @@ onMounted(() => {
     </div>
     <CommercialsSkeleton v-if="isLoading" />
     <div v-else class="commercials">
-        <Commercial 
-            v-for="commercial in commercials" 
+        <CommercialCard
+            v-for="commercial in commercials"
             :key="commercial.id"
             :commercialId="commercial.id" 
             :name="commercial.name"
@@ -47,5 +47,7 @@ onMounted(() => {
     justify-content: space-between;
     flex-wrap: wrap;
 }
-
+/* @media ( <= width <= ) {
+    
+} */
 </style>

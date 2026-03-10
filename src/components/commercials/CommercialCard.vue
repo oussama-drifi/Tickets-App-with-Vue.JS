@@ -145,4 +145,16 @@ const props = defineProps({
         }
     }
 }
+
+/* @media ( 1500px <= width <= 1700px ) {
+    .commercial-card {
+        width: calc(100%/6 - 10px);
+    }
+}
+@media ( width >= 1701 ) {
+    .commercial-card {
+        width: calc(100%/7);
+    }
+} */
+
 </style>

@@ -29,3 +29,20 @@
   --danger: #F87171;
   --success: #4ADE80;
 }
+
+
+/* scroll bar*/
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}

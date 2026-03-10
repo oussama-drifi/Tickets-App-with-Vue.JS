@@ -27,7 +27,7 @@ const routes = [
             path: 'details/:id?',
             name: 'commercial-details',
             component: () => import('@/views/CommercialDetails.vue')
-          },
+          }
         ]
       },
       {

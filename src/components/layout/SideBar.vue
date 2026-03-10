@@ -62,17 +62,18 @@ const toggleTheme = () => {
 }
 
 .sidebar-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding-bottom: clamp(10px, 1.5vw, 20px);
     border-bottom: 1px solid var(--border);
     margin-bottom: clamp(8px, 1vw, 16px);
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
 }
 
 .sidebar-logo img {
-    /* width: clamp(22px, 2.5vw, 36px); */
-    width: 100%;
+    width: clamp(28px, 3.5vw, 44px);
+    height: clamp(28px, 3.5vw, 44px);
+    object-fit: contain;
 }
 
 .sidebar-nav {
@@ -101,10 +102,12 @@ const toggleTheme = () => {
 }
 
 .nav-link.router-link-active {
-    outline: 2px solid var(--primary);
-    border: 2px solid var(--surface);
-    background-color: var(--primary);
-    color: var(--bg);
+    /* outline: 2px solid var(--primary);
+    border: 2px solid var(--surface); */
+    /* background-color: var(--primary); */
+    /* color: var(--bg); */
+    background-color: rgba(245, 158, 11, 0.1);
+    border: 2px solid #78350F;
 }
 
 .nav-link i {
@@ -193,6 +196,7 @@ const toggleTheme = () => {
 
     .sidebar-logo img {
         width: 24px;
+        height: 24px;
     }
 
     .sidebar-nav {

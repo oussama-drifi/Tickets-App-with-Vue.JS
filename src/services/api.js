@@ -22,12 +22,12 @@ async function request(url, options = {}) {
   const response = await fetch(url, { ...options, headers })
 
   if (!response.ok) {
-    await new Promise(res => setTimeout(res, 5000))
+    await new Promise(res => setTimeout(res, 1200))
     const body = await response.json().catch(() => null)
     throw new Error(body?.error || `API error: ${response.status}`)
   }
 
-  await new Promise(res => setTimeout(res, 5000))
+  await new Promise(res => setTimeout(res, 1200))
   return response.json()
 }
 

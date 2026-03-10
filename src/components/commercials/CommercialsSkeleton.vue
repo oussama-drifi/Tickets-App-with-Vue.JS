@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CardSkeleton from '@/components/common/CardSkeleton.vue';
+import CardSkeleton from '@/components/commercials/CardSkeleton.vue';
 
 </script>
 

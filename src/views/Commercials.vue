@@ -3,8 +3,8 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCommercialsStore } from '@/stores/commercials'
 import { storeToRefs } from 'pinia'
-import Header from '@/components/common/Header.vue'
-import NewCommercial from '@/views/NewCommercial.vue'
+import Header from '@/components/layout/Header.vue'
+import NewCommercial from '@/components/commercials/NewCommercial.vue'
 import { RouterView } from 'vue-router'
 
 const route = useRoute()
