@@ -1,10 +1,31 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useCommercialsStore } from '@/stores/commercials'
+import { storeToRefs } from 'pinia'
 import Header from '@/components/common/Header.vue'
 import NewCommercial from '@/views/NewCommercial.vue'
 import { RouterView } from 'vue-router'
 
+const route = useRoute()
+const router = useRouter()
+const commercialsStore = useCommercialsStore()
+const { commercials } = storeToRefs(commercialsStore)
+
 const drawerOpen = ref(false)
+
+const isDetailsPage = computed(() => route.name === 'commercial-details')
+
+const selectedId = computed(() => {
+    return route.params.id ? Number(route.params.id) : null
+})
+
+function onSelectCommercial(event) {
+    const id = event.target.value
+    if (id) {
+        router.replace({ name: 'commercial-details', params: { id } })
+    }
+}
 
 </script>
 
@@ -12,6 +33,21 @@ const drawerOpen = ref(false)
     <h1>Commercials</h1>
     <div class="commercials-toolbar">
         <Header />
+        <select
+            v-if="isDetailsPage"
+            class="commercial-select"
+            :value="selectedId || ''"
+            @change="onSelectCommercial"
+        >
+            <option value="">-- Choose a commercial --</option>
+            <option
+                v-for="c in commercials"
+                :key="c.id"
+                :value="c.id"
+            >
+                {{ c.name }}
+            </option>
+        </select>
         <button class="add-new-btn" @click="drawerOpen = true">
             <i class="bi bi-plus-lg"></i> Add New
         </button>
@@ -41,11 +77,22 @@ const drawerOpen = ref(false)
     gap: 12px;
 }
 
+.commercial-select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    font-size: 14px;
+    min-width: 250px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
 .add-new-btn {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 10px 16px;
+    padding: 8px 16px;
     background-color: var(--primary);
     color: var(--bg);
     border: none;
@@ -74,7 +121,7 @@ const drawerOpen = ref(false)
     position: fixed;
     top: 0;
     right: 0;
-    width: 40%;
+    width: 30%;
     height: 100%;
     background: var(--bg);
     z-index: 1000;

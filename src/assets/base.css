@@ -12,6 +12,7 @@
   --text: #282625;
   --text-muted: #353535;
   --border: #EEEEEE;
+  --skeleton-gradient: linear-gradient(90deg, #eee 25%, #ddd 50%, #eee 75%);
   --danger: #EF4444;
   --success: #22C55E;
 }
@@ -24,6 +25,7 @@
   --text: #F7F7F7;
   --text-muted: #e8e8e8;
   --border: #454545;
+  --skeleton-gradient: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
   --danger: #F87171;
   --success: #4ADE80;
 }

@@ -1,5 +1,5 @@
 <template>
-    <div class="company-card skeleton">
+    <div class="skeleton-card skeleton">
         <div class="card-header">
             <div class="bone bone-icon"></div>
             <div class="header">
@@ -8,9 +8,9 @@
             </div>
         </div>
         <div class="card-body">
-            <div class="bone bone-line short"></div>
+            <!-- <div class="bone bone-line short"></div>
             <div class="bone bone-line"></div>
-            <div class="bone bone-line"></div>
+            <div class="bone bone-line"></div> -->
             <div class="bone bone-line"></div>
             <div class="bone bone-line medium"></div>
         </div>
@@ -21,12 +21,13 @@
 </template>
 
 <style scoped>
-.company-card {
-    border: 2px solid #eee;
+.skeleton-card {
+    border: 2px solid var(--border);
     border-radius: 15px;
     padding: 10px;
-    background: #fff;
-    margin: 0 4px;
+    background: var(--surface);
+    width: calc(20% - 5px);
+    margin-bottom: 10px;
 }
 
 .card-header {
@@ -47,7 +48,7 @@
 }
 
 .bone {
-    background: linear-gradient(90deg, #eee 25%, #ddd 50%, #eee 75%);
+    background: var(--skeleton-gradient);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
     border-radius: 6px;

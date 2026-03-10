@@ -77,7 +77,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 .nav-link {
     font-size: 16px;
     text-decoration: none;
-    padding: 10px;
+    padding: 6px 10px;
     border: 5px;
     font-weight: 600;
     color: var(--text-muted);

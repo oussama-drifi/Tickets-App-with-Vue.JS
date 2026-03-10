@@ -24,12 +24,7 @@ const routes = [
             component: () => import('@/views/AllCommercials.vue')
           },
           {
-            path: 'new',
-            name: 'commercial-new',
-            component: () => import('@/views/NewCommercial.vue')
-          },
-          {
-            path: 'details',
+            path: 'details/:id?',
             name: 'commercial-details',
             component: () => import('@/views/CommercialDetails.vue')
           },

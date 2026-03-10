@@ -7,6 +7,8 @@ const isDark = ref(document.documentElement.getAttribute('data-theme') === 'dark
 const toggleTheme = () => {
     isDark.value = !isDark.value
     document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : '');
+    localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+    console.log(localStorage.getItem('theme'))
 }
 </script>
 

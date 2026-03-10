@@ -128,7 +128,6 @@ async function handleSubmit() {
                 <span v-if="submitting" class="spinner"></span>
                 <span v-if="!submitting"><i class="bi bi-plus-lg"></i> Create Commercial</span>
                 <span v-else>submitting</span>
-                <!-- {{ submitting ? 'Creating...' : 'Create Commercial' }} -->
             </button>
         </form>
 
