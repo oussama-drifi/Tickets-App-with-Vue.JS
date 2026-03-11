@@ -47,7 +47,4 @@ onMounted(() => {
     justify-content: space-between;
     flex-wrap: wrap;
 }
-/* @media ( <= width <= ) {
-    
-} */
 </style>

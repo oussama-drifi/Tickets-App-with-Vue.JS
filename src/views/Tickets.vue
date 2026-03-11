@@ -5,7 +5,7 @@ import { onMounted } from 'vue';
 import TicketsTable from '@/components/tickets/TicketsTable.vue';
 
 const store = useTicketsStore()
-const { isLoading, error, tickets, sortedTickets, sortBy, sortDir } = storeToRefs(store)
+const { isLoading, error, tickets, sortedTickets, sortBy, sortDir, fetched } = storeToRefs(store)
 const { fetchTickets, toggleSort } = store
 
 function onStatusChange(ticket, status) {
@@ -13,7 +13,7 @@ function onStatusChange(ticket, status) {
 }
 
 onMounted(() => {
-    if (!tickets.value.length) fetchTickets()
+    if (!fetched.value) fetchTickets()
 })
 </script>
 

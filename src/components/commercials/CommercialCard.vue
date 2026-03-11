@@ -49,7 +49,7 @@ const props = defineProps({
             </div>
         </div>
         <div class="card-footer">
-            <button @click="router.push({name: 'commercial-details', params: {id: commercialId} })"><span>learn more<i class="bi bi-arrow-up-right"></i></span></button>
+            <button @click="router.push({name: 'commercial-details', params: {id: commercialId} })"><span>see tickets<i class="bi bi-arrow-up-right"></i></span></button>
         </div>
     </div>
 </template>

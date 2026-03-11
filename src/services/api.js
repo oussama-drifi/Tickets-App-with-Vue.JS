@@ -47,6 +47,12 @@ function createClient(baseURL) {
         body: data instanceof FormData ? data : JSON.stringify(data),
         ...options
       }),
+    patch: (endpoint, data, options = {}) =>
+      request(`${baseURL}${endpoint}`, {
+        method: 'PATCH',
+        body: data instanceof FormData ? data : JSON.stringify(data),
+        ...options
+      }),
     delete: (endpoint, options = {}) =>
       request(`${baseURL}${endpoint}`, { method: 'DELETE', ...options })
   }

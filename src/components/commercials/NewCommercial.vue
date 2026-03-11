@@ -14,6 +14,7 @@ const isDragging = ref(false)
 const showPassword = ref(false)
 const submitting = ref(false)
 const fileInput = ref(null)
+const emit = defineEmits(['created'])
 const toast = ref(null) // { type: 'success' | 'error', message: string }
 
 function resetForm() {
@@ -65,6 +66,7 @@ async function handleSubmit() {
 
         await adminApi.post('/commercials', formData)
         resetForm()
+        emit('created')
         showToast('success', 'Commercial created successfully')
     } catch (err) {
         showToast('error', err.message)

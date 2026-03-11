@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
+import { adminApi } from '@/services/api';
 
 const props = defineProps({
     tickets: {
@@ -21,6 +22,14 @@ const props = defineProps({
     sortDir: {
         type: String,
         default: 'asc',
+    },
+    api: {
+        type: Object,
+        default: () => adminApi,
+    },
+    readonly: {
+        type: Boolean,
+        default: false,
     }
 })
 
@@ -85,16 +94,33 @@ function toggleDropdown(ticketId, e) {
     }
     const trigger = e.currentTarget
     const rect = trigger.getBoundingClientRect()
-    dropdownPos.value = {
-        top: rect.bottom + 6 + 'px',
-        left: rect.left + 'px',
+    const dropdownHeight = 180
+    const spaceBelow = window.innerHeight - rect.bottom
+
+    if (spaceBelow < dropdownHeight) {
+        dropdownPos.value = {
+            top: (rect.top - dropdownHeight - 6) + 'px',
+            left: rect.left + 'px',
+        }
+    } else {
+        dropdownPos.value = {
+            top: rect.bottom + 6 + 'px',
+            left: rect.left + 'px',
+        }
     }
     openDropdown.value = ticketId
 }
 
-function selectStatus(ticket, status) {
-    emit('status-change', ticket, status)
+async function selectStatus(ticket, status) {
+    const previousStatus = ticket.status
+    ticket.status = status
     openDropdown.value = null
+
+    try {
+        await props.api.patch(`/tickets/${ticket.id}/status`, { status })
+    } catch {
+        ticket.status = previousStatus
+    }
 }
 
 function formatDate(dateStr) {
@@ -104,6 +130,34 @@ function formatDate(dateStr) {
         month: 'short',
         day: 'numeric'
     })
+}
+
+// Image modal state
+const modalOpen = ref(false)
+const modalLoading = ref(false)
+const modalImage = ref(null)
+const modalDescription = ref('')
+const modalTitle = ref('')
+
+async function openImageModal(ticket) {
+    modalOpen.value = true
+    modalLoading.value = true
+    modalDescription.value = ticket.description || ''
+    modalTitle.value = ticket.title || ''
+    modalImage.value = null
+
+    try {
+        const data = await props.api.get(`/tickets/${ticket.id}/image`)
+        modalImage.value = data.imagePath ? `http://localhost:8000/${data.imagePath}` : null
+    } catch {
+        modalImage.value = null
+    } finally {
+        modalLoading.value = false
+    }
+}
+
+function closeModal() {
+    modalOpen.value = false
 }
 
 function closeDropdowns(e) {
@@ -166,7 +220,7 @@ onUnmounted(() => {
             <tbody>
                 <tr v-for="ticket in tickets" :key="ticket.id">
                     <td>
-                        <div class="ticket-image">
+                        <div class="ticket-image clickable" @click="openImageModal(ticket)">
                             <i class="bi bi-image"></i>
                         </div>
                     </td>
@@ -183,13 +237,17 @@ onUnmounted(() => {
                         <span class="ticket-publisher">{{ ticket.owner?.email || '—' }}</span>
                     </td>
                     <td>
-                        <div class="status-select" :class="{ open: openDropdown === ticket.id }">
+                        <div v-if="!readonly" class="status-select" :class="{ open: openDropdown === ticket.id }">
                             <button class="status-trigger" :class="ticket.status" @click="toggleDropdown(ticket.id, $event)">
                                 <span class="status-dot"></span>
                                 {{ ticket.status }}
                                 <i class="bi bi-chevron-down chevron"></i>
                             </button>
                         </div>
+                        <span v-else class="status-badge" :class="ticket.status">
+                            <span class="status-dot"></span>
+                            {{ ticket.status }}
+                        </span>
                     </td>
                 </tr>
             </tbody>
@@ -215,6 +273,36 @@ onUnmounted(() => {
                 <i v-if="tickets.find(t => t.id === openDropdown)?.status === status" class="bi bi-check2"></i>
             </button>
         </div>
+    </Teleport>
+
+    <!-- Image & Description Modal -->
+    <Teleport to="body">
+        <Transition name="modal-fade">
+            <div v-if="modalOpen" class="modal-overlay" @click.self="closeModal">
+                <div class="modal-content">
+                    <button class="modal-close" @click="closeModal">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                    <h3 class="modal-title">{{ modalTitle }}</h3>
+
+                    <div v-if="modalLoading" class="modal-loading">
+                        <div class="spinner"></div>
+                    </div>
+
+                    <template v-else>
+                        <div class="modal-image-wrapper">
+                            <img v-if="modalImage" :src="modalImage" alt="Ticket image" class="modal-image" />
+                            <div v-else class="modal-no-image">
+                                <i class="bi bi-image"></i>
+                                <span>No image available</span>
+                            </div>
+                        </div>
+                        <p v-if="modalDescription" class="modal-description">{{ modalDescription }}</p>
+                        <p v-else class="modal-description muted">No description.</p>
+                    </template>
+                </div>
+            </div>
+        </Transition>
     </Teleport>
 </template>
 
@@ -353,6 +441,16 @@ onUnmounted(() => {
     color: var(--text-muted);
     opacity: 0.5;
     font-size: 16px;
+    transition: opacity 0.15s, border-color 0.15s;
+}
+
+.ticket-image.clickable {
+    cursor: pointer;
+}
+.ticket-image.clickable:hover {
+    opacity: 0.8;
+    border-color: var(--primary);
+    color: var(--primary);
 }
 
 .ticket-title {
@@ -444,6 +542,30 @@ onUnmounted(() => {
 [data-theme="dark"] .paid.status-trigger { color: #86EFAC; border-color: #14532D; background: rgba(34, 197, 94, 0.1); }
 [data-theme="dark"] .rejected.status-trigger { color: #FCA5A5; border-color: #7F1D1D; background: rgba(239, 68, 68, 0.1); }
 
+/* Read-only status badge */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.pending.status-badge { color: #B45309; border-color: #FDE68A; background: #FFFBEB; }
+.verified.status-badge { color: #1D4ED8; border-color: #BFDBFE; background: #EFF6FF; }
+.paid.status-badge { color: #15803D; border-color: #BBF7D0; background: #F0FDF4; }
+.rejected.status-badge { color: #B91C1C; border-color: #FECACA; background: #FEF2F2; }
+
+[data-theme="dark"] .pending.status-badge { color: #FCD34D; border-color: #78350F; background: rgba(245, 158, 11, 0.1); }
+[data-theme="dark"] .verified.status-badge { color: #93C5FD; border-color: #1E3A5F; background: rgba(59, 130, 246, 0.1); }
+[data-theme="dark"] .paid.status-badge { color: #86EFAC; border-color: #14532D; background: rgba(34, 197, 94, 0.1); }
+[data-theme="dark"] .rejected.status-badge { color: #FCA5A5; border-color: #7F1D1D; background: rgba(239, 68, 68, 0.1); }
+
 /* ---- Skeleton ---- */
 .skeleton {
     border-radius: 6px;
@@ -534,5 +656,136 @@ onUnmounted(() => {
     margin-left: auto;
     font-size: 14px;
     color: var(--primary);
+}
+
+/* ---- Image Modal ---- */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+    transition: opacity 0.25s ease;
+}
+.modal-fade-enter-active .modal-content,
+.modal-fade-leave-active .modal-content {
+    transition: transform 0.25s ease, opacity 0.25s ease;
+}
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+    opacity: 0;
+}
+.modal-fade-enter-from .modal-content,
+.modal-fade-leave-to .modal-content {
+    transform: scale(0.95) translateY(10px);
+    opacity: 0;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 520px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+.modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+}
+.modal-close:hover {
+    background: var(--bg);
+    color: var(--text);
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 18px;
+    padding-right: 30px;
+}
+
+.modal-loading {
+    display: flex;
+    justify-content: center;
+    padding: 40px 0;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.modal-image-wrapper {
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+}
+
+.modal-image {
+    width: 100%;
+    display: block;
+    object-fit: contain;
+    max-height: 400px;
+}
+
+.modal-no-image {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 48px 0;
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+.modal-no-image i {
+    font-size: 32px;
+}
+.modal-no-image span {
+    font-size: 14px;
+}
+
+.modal-description {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+}
+.modal-description.muted {
+    color: var(--text-muted);
+    opacity: 0.6;
+    font-style: italic;
 }
 </style>

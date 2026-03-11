@@ -1,15 +1,48 @@
 <script setup>
-import { RouterLink } from 'vue-router'
-import { ref } from 'vue';
+import { RouterLink, useRouter } from 'vue-router'
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+
+const auth = useAuthStore()
+const router = useRouter()
 
 const isDark = ref(document.documentElement.getAttribute('data-theme') === 'dark')
+const showProfile = ref(false)
+const profileCardRef = ref(null)
+const profileBtnRef = ref(null)
 
 const toggleTheme = () => {
     isDark.value = !isDark.value
     document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : '');
     localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
-    console.log(localStorage.getItem('theme'))
 }
+
+const toggleProfile = () => {
+    showProfile.value = !showProfile.value
+}
+
+const handleOutsideClick = (e) => {
+    if (
+        showProfile.value &&
+        profileCardRef.value && !profileCardRef.value.contains(e.target) &&
+        profileBtnRef.value && !profileBtnRef.value.contains(e.target)
+    ) {
+        showProfile.value = false
+    }
+}
+
+const handleLogout = () => {
+    showProfile.value = false
+    auth.logout(router)
+}
+
+onMounted(() => {
+    document.addEventListener('click', handleOutsideClick)
+})
+
+onBeforeUnmount(() => {
+    document.removeEventListener('click', handleOutsideClick)
+})
 </script>
 
 <template>
@@ -27,7 +60,7 @@ const toggleTheme = () => {
                     <i class="bi bi-people"></i>
                 </RouterLink>
                 <RouterLink :to="{ name: 'tickets' }" class="nav-link" data-tooltip="Tickets">
-                    <i class="bi bi-ticket-detailed"></i>
+                    <i class="bi bi-ticket-perforated"></i>
                 </RouterLink>
             </nav>
         </div>
@@ -40,15 +73,43 @@ const toggleTheme = () => {
             <RouterLink to="/admin/settings" class="nav-link" data-tooltip="Settings">
                 <i class="bi bi-gear"></i>
             </RouterLink>
-            <span class="nav-link" data-tooltip="Profile">
+            <span ref="profileBtnRef" class="nav-link" :class="{ active: showProfile }" data-tooltip="Profile" @click="toggleProfile">
                 <i class="bi bi-person"></i>
             </span>
         </nav>
+
+        <!-- Profile Card -->
+        <Transition name="profile-card">
+            <div v-if="showProfile" ref="profileCardRef" class="profile-card">
+                <div class="profile-card-header">
+                    <div class="profile-avatar">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                    <div class="profile-info">
+                        <span class="profile-name">{{ auth.user?.name || 'Admin' }}</span>
+                        <span class="profile-role">{{ auth.user?.role || 'Administrator' }}</span>
+                    </div>
+                </div>
+                <div class="profile-card-body">
+                    <div class="profile-detail">
+                        <i class="bi bi-envelope"></i>
+                        <span>{{ auth.user?.email || '—' }}</span>
+                    </div>
+                </div>
+                <div class="profile-card-footer">
+                    <button class="logout-btn" @click="handleLogout">
+                        <i class="bi bi-box-arrow-left"></i>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </Transition>
     </aside>
 </template>
 
 <style scoped>
 .sidebar {
+    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -94,6 +155,7 @@ const toggleTheme = () => {
     text-decoration: none;
     color: var(--text-muted);
     transition: background-color 0.2s, color 0.2s;
+    cursor: pointer;
 }
 
 .nav-link:hover {
@@ -102,12 +164,10 @@ const toggleTheme = () => {
 }
 
 .nav-link.router-link-active {
-    /* outline: 2px solid var(--primary);
-    border: 2px solid var(--surface); */
-    /* background-color: var(--primary); */
-    /* color: var(--bg); */
-    background-color: rgba(245, 158, 11, 0.1);
-    border: 2px solid #78350F;
+    outline: 2px solid var(--primary);
+    border: 2px solid var(--surface);
+    background-color: var(--primary);
+    color: var(--bg);
 }
 
 .nav-link i {
@@ -153,9 +213,138 @@ const toggleTheme = () => {
     opacity: 1;
 }
 
+.nav-link.active {
+    background-color: var(--border);
+    color: var(--text);
+}
+
 .secondary-links {
     border-top: 1px solid var(--border);
     padding-top: clamp(8px, 1vw, 16px);
+}
+
+/* Profile Card */
+.profile-card {
+    position: absolute;
+    bottom: 10px;
+    left: calc(100% + 12px);
+    width: 280px;
+    background-color: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    z-index: 200;
+    overflow: hidden;
+}
+
+.profile-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+.profile-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.profile-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-role {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: capitalize;
+}
+
+.profile-card-body {
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.profile-detail {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.profile-detail i {
+    font-size: 15px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.profile-detail span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-card-footer {
+    padding: 10px 10px;
+    border-top: 1px solid var(--border);
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: #ef4444;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.logout-btn:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+.logout-btn i {
+    font-size: 16px;
+}
+
+/* Profile card transition */
+.profile-card-enter-active,
+.profile-card-leave-active {
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.profile-card-enter-from,
+.profile-card-leave-to {
+    opacity: 0;
+    transform: translateY(8px);
 }
 
 /* Tablet: compact sidebar */
@@ -172,11 +361,12 @@ const toggleTheme = () => {
         width: 100%;
         height: auto;
         padding: 8px 12px;
-        border-radius: 12px 12px 0 0;
         position: fixed;
         bottom: 0;
         left: 0;
         z-index: 50;
+        border-radius: 0;
+        border-width: 2px 0 0 0;
     }
 
     .sidebar-top {
@@ -224,6 +414,13 @@ const toggleTheme = () => {
         padding-top: 0;
         border-left: 1px solid var(--border);
         padding-left: 4px;
+    }
+
+    .profile-card {
+        bottom: calc(100% + 12px);
+        left: auto;
+        right: 0;
+        width: 260px;
     }
 }
 </style>

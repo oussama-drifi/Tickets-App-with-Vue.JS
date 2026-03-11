@@ -1,9 +1,11 @@
 <script setup>
 import { ref, computed } from 'vue'
+
 import { useRoute, useRouter } from 'vue-router'
 import { useCommercialsStore } from '@/stores/commercials'
 import { storeToRefs } from 'pinia'
 import Header from '@/components/layout/Header.vue'
+import CustomSelect from '@/components/ui/CustomSelect.vue'
 import NewCommercial from '@/components/commercials/NewCommercial.vue'
 import { RouterView } from 'vue-router'
 
@@ -20,11 +22,19 @@ const selectedId = computed(() => {
     return route.params.id ? Number(route.params.id) : null
 })
 
-function onSelectCommercial(event) {
-    const id = event.target.value
+const commercialOptions = computed(() =>
+    commercials.value.map(c => ({ value: c.id, label: c.name }))
+)
+
+function onSelectCommercial(id) {
     if (id) {
         router.replace({ name: 'commercial-details', params: { id } })
     }
+}
+
+function onCommercialCreated() {
+    commercialsStore.fetchCommercials()
+    drawerOpen.value = false
 }
 
 </script>
@@ -33,21 +43,13 @@ function onSelectCommercial(event) {
     <h1>Commercials</h1>
     <div class="commercials-toolbar">
         <Header />
-        <select
+        <CustomSelect
             v-if="isDetailsPage"
-            class="commercial-select"
-            :value="selectedId || ''"
-            @change="onSelectCommercial"
-        >
-            <option value="">-- Choose a commercial --</option>
-            <option
-                v-for="c in commercials"
-                :key="c.id"
-                :value="c.id"
-            >
-                {{ c.name }}
-            </option>
-        </select>
+            :options="commercialOptions"
+            :model-value="selectedId"
+            placeholder="-- Choose a commercial --"
+            @update:model-value="onSelectCommercial"
+        />
         <button class="add-new-btn" @click="drawerOpen = true">
             <i class="bi bi-plus-lg"></i> Add New
         </button>
@@ -65,7 +67,7 @@ function onSelectCommercial(event) {
             <button class="drawer-close" @click="drawerOpen = false">
                 <i class="bi bi-x-lg"></i>
             </button>
-            <NewCommercial />
+            <NewCommercial @created="onCommercialCreated" />
         </div>
     </Transition>
 </template>
@@ -75,17 +77,6 @@ function onSelectCommercial(event) {
     display: flex;
     align-items: center;
     gap: 12px;
-}
-
-.commercial-select {
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 2px solid var(--border);
-    background: var(--surface);
-    font-size: 14px;
-    min-width: 250px;
-    cursor: pointer;
-    font-family: inherit;
 }
 
 .add-new-btn {
@@ -112,7 +103,8 @@ function onSelectCommercial(event) {
 .drawer-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
     z-index: 999;
 }
 
