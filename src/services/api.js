@@ -1,6 +1,7 @@
-const ADMIN_URL = '/api/admin'
-const COMMERCIAL_URL = '/api/commercials'
-const AUTH_URL = '/api/auth'
+const BASE = import.meta.env.VITE_API_URL || ''
+const ADMIN_URL = `${BASE}/api/admin`
+const COMMERCIAL_URL = `${BASE}/api/commercials`
+const AUTH_URL = `${BASE}/api/auth`
 
 function getToken() {
   return localStorage.getItem('token')
