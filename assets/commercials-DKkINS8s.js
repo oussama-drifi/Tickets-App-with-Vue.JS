@@ -1,1 +1,0 @@
-import{G as o,r,z as t}from"./index-9hiNvIv5.js";const m=o("commercials",()=>{const s=r([]),e=r(!1),a=r(null);async function l(){e.value=!0,a.value=null;try{s.value=await t.get("/commercials")}catch(c){a.value=c.message}finally{e.value=!1}}return{commercials:s,isLoading:e,error:a,fetchCommercials:l}});export{m as u};
