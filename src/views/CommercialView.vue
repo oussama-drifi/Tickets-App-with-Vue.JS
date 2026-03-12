@@ -114,7 +114,8 @@ onBeforeUnmount(() => document.removeEventListener('click', handleOutsideClick))
     padding: 0 24px;
     height: 60px;
     background: var(--surface);
-    border-bottom: 1px solid var(--border);
+    border: 2px solid var(--border);
+    border-radius: 6px;
     flex-shrink: 0;
 }
 
@@ -293,8 +294,11 @@ onBeforeUnmount(() => document.removeEventListener('click', handleOutsideClick))
 
 /* ---- Responsive ---- */
 @media (max-width: 768px) {
+
     .navbar {
         padding: 0 14px;
+        border-width: 0 0 3px;
+        border-radius: 0;
     }
 
     .nav-left {
@@ -306,7 +310,15 @@ onBeforeUnmount(() => document.removeEventListener('click', handleOutsideClick))
     }
 
     .nav-item {
-        padding: 8px 10px;
+        width: 45px;
+        height: 45px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        i {
+            font-size: 20px;
+        }
     }
 
     .commercial-main {

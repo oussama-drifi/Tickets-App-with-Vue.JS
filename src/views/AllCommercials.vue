@@ -43,8 +43,14 @@ onMounted(() => {
 <style scoped>
 .commercials {
     margin-top: 15px;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+@media (max-width: 768px) {
+    .commercials {
+        grid-template-columns: 1fr;
+    }
 }
 </style>

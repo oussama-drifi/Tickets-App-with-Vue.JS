@@ -60,8 +60,6 @@ const props = defineProps({
     border-radius: 15px;
     padding: 10px;
     background: var(--surface);
-    width: calc(20% - 5px);
-    margin-bottom: 10px;
     display: flex;
     flex-direction: column;
 }
@@ -79,14 +77,23 @@ const props = defineProps({
     object-fit: cover;
     flex-shrink: 0;
 }
+.header {
+    min-width: 0;
+}
 .header h3 {
     line-height: 1.2;
     text-transform: lowercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .header span {
     font-size: 14px;
     color: var(--text-muted);
-    display: inline-block;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .card-body {

@@ -26,14 +26,18 @@
     border-radius: 15px;
     padding: 10px;
     background: var(--surface);
-    width: calc(20% - 5px);
-    margin-bottom: 10px;
+    width: 100%;
 }
 
 .card-header {
     display: flex;
     align-items: center;
     gap: 14px;
+}
+
+.header {
+    min-width: 0;
+    flex: 1;
 }
 
 .card-body {
@@ -62,12 +66,12 @@
 }
 
 .bone-title {
-    width: 160px;
+    width: 60%;
     height: 14px;
 }
 
 .bone-subtitle {
-    width: 220px;
+    width: 80%;
     height: 10px;
     margin-top: 6px;
 }

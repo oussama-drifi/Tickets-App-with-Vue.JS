@@ -27,9 +27,15 @@ import CardSkeleton from '@/components/commercials/CardSkeleton.vue';
 <style scoped>
 .commercials-skeleon {
     margin-top: 15px;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+@media (max-width: 768px) {
+    .commercials-skeleon {
+        grid-template-columns: 1fr;
+    }
 }
 
 </style>

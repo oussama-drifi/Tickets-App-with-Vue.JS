@@ -11,3 +11,11 @@ body {
   color: var(--text-muted);
   min-height: 100vh;
 }
+
+@media (max-width: 768px) {
+
+    #app {
+        padding: 0;
+    }
+
+}
