@@ -297,8 +297,6 @@ onBeforeUnmount(() => document.removeEventListener('click', handleOutsideClick))
 
     .navbar {
         padding: 0 14px;
-        border-width: 0 0 3px;
-        border-radius: 0;
     }
 
     .nav-left {
