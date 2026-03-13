@@ -2,6 +2,8 @@
 import { onMounted, onUnmounted, ref } from 'vue';
 import { adminApi } from '@/services/api';
 
+const apiUrl = import.meta.env.VITE_API_URL
+
 const props = defineProps({
     tickets: {
         type: Array,
@@ -148,7 +150,7 @@ async function openImageModal(ticket) {
 
     try {
         const data = await props.api.get(`/tickets/${ticket.id}/image`)
-        modalImage.value = data.imagePath ? `${import.meta.env.VITE_API_URL}/${data.imagePath}` : null
+        modalImage.value = data.imagePath ? `${apiUrl}/${data.imagePath}` : null
     } catch {
         modalImage.value = null
     } finally {
