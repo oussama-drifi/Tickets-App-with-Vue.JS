@@ -148,7 +148,7 @@ async function openImageModal(ticket) {
 
     try {
         const data = await props.api.get(`/tickets/${ticket.id}/image`)
-        modalImage.value = data.imagePath ? `http://localhost:8000/${data.imagePath}` : null
+        modalImage.value = data.imagePath ? `${import.meta.env.VITE_API_URL}/${data.imagePath}` : null
     } catch {
         modalImage.value = null
     } finally {

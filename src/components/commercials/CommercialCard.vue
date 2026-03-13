@@ -35,7 +35,7 @@ const props = defineProps({
     <div class="commercial-card">
         <div class="card-header">
             <div class="profile-image">
-                <img v-if="image" :src="`http://localhost:8000/${image}`" alt="profile">
+                <img v-if="image" :src="`${import.meta.env.VITE_API_URL}/${image}`" alt="profile">
                 <img v-else src="/defaultProfile.png" alt="profile">
             </div>
             <div class="header">

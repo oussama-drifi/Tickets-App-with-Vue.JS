@@ -48,7 +48,7 @@ watch(selectedId, (id) => {
         <div class="profile-section">
             <img
                 v-if="commercial.profileImagePath"
-                :src="`http://localhost:8000/${commercial.profileImagePath}`"
+                :src="`${import.meta.env.VITE_API_URL}/${commercial.profileImagePath}`"
                 alt="profile"
                 class="profile-image"
             />
