@@ -1,17 +1,30 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { adminApi } from '@/services/api'
 
 export const useCommercialsStore = defineStore('commercials', () => {
   const commercials = ref([])
   const isLoading = ref(false)
   const error = ref(null)
+  const fetched = ref(false);
+
+  const filteredCommercials = (searchQuery, status) => {
+    return computed(() => {
+      return commercials.value.filter(c => {
+        if (status === 'all') {
+          return c.name.startsWith(searchQuery)
+        }
+        return c.name.startsWith(searchQuery) && c.name.status === status
+      })
+    })
+  } 
 
   async function fetchCommercials() {
     isLoading.value = true
     error.value = null
     try {
       commercials.value = await adminApi.get('/commercials')
+      fetched.value = true
     } catch (err) {
       error.value = err.message
     } finally {
@@ -19,5 +32,6 @@ export const useCommercialsStore = defineStore('commercials', () => {
     }
   }
 
-  return { commercials, isLoading, error, fetchCommercials }
+
+  return { commercials, isLoading, error, fetchCommercials, fetched }
 })

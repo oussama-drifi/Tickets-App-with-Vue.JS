@@ -16,8 +16,6 @@
 
 <style scoped>
 .nav-bar {
-    background-color: var(--surface);
-    border: 2px solid var(--border);
     width: fit-content;
     border-radius: 8px;
     padding: 2px;
@@ -32,9 +30,28 @@
     font-weight: 600;
     color: var(--text-muted);
     border-radius: 6px;
+    position: relative;
+
+    &::after {
+        content: "";
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        height: 3px;
+        left: 0;
+        top: -10px;
+        border-radius: 90px;
+        background-color: var(--primary);
+        opacity: 0;
+        transition-duration: 0.3s;
+    }
 }
 .nav-link.router-link-active {
-    background-color: var(--primary);
-    color: var(--bg);
+    color: var(--primary);
+
+    &::after {
+        opacity: 1;
+    }
+    
 }
 </style>

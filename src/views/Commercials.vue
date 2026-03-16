@@ -1,10 +1,9 @@
 <script setup>
 import { ref, computed } from 'vue'
-
 import { useRoute, useRouter } from 'vue-router'
 import { useCommercialsStore } from '@/stores/commercials'
 import { storeToRefs } from 'pinia'
-import Header from '@/components/layout/Header.vue'
+import NavBar from '@/components/layout/NavBar.vue'
 import CustomSelect from '@/components/ui/CustomSelect.vue'
 import NewCommercial from '@/components/commercials/NewCommercial.vue'
 import { RouterView } from 'vue-router'
@@ -42,17 +41,21 @@ function onCommercialCreated() {
 <template>
     <h1>Commercials</h1>
     <div class="commercials-toolbar">
-        <Header />
-        <CustomSelect
-            v-if="isDetailsPage"
-            :options="commercialOptions"
-            :model-value="selectedId"
-            placeholder="-- Choose a commercial --"
-            @update:model-value="onSelectCommercial"
-        />
-        <button class="add-new-btn" @click="drawerOpen = true">
-            <i class="bi bi-plus-lg"></i> Add New
-        </button>
+        <div class="toolbar-left">
+            <NavBar />
+            <CustomSelect
+                v-if="isDetailsPage"
+                :options="commercialOptions"
+                :model-value="selectedId"
+                placeholder="-- Choose a commercial --"
+                @update:model-value="onSelectCommercial"
+            />
+        </div>
+        <div class="toolbar-right">
+            <button class="add-new-btn" @click="drawerOpen = true">
+                <i class="bi bi-plus-lg"></i> add New
+            </button>
+        </div>
     </div>
     <RouterView />
 
@@ -74,9 +77,10 @@ function onCommercialCreated() {
 
 <style scoped>
 .commercials-toolbar {
+    width: 100%;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 12px;
 }
 
 .add-new-btn {
@@ -97,6 +101,14 @@ function onCommercialCreated() {
 
 .add-new-btn:hover {
     background-color: var(--primary-hover);
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+}
+.toolbar-right {
+    margin-right: 10px;
 }
 
 /* Overlay */

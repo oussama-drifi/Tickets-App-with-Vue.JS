@@ -72,7 +72,10 @@ watch(selectedId, (id) => {
                 @status-change="onStatusChange"
                 @sort="ticketsStore.toggleSort"
             />
-            <p v-else class="no-tickets">No tickets found for this commercial.</p>
+            <p v-else class="no-tickets">
+                <i class="bi bi-ticket"></i>
+                No tickets found for this commercial.
+            </p>
         </div>
     </div>
 
@@ -86,7 +89,7 @@ watch(selectedId, (id) => {
 <style scoped>
 
 
-.select-prompt, .not-found {
+.select-prompt, .not-found, .no-tickets {
     display: flex;
     flex-direction: column;
     align-items: center;
