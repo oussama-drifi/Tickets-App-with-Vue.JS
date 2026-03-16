@@ -3,7 +3,6 @@ import { onMounted, ref } from 'vue'
 import { commercialApi } from '@/services/api'
 import TicketCard from '@/components/tickets/TicketCard.vue'
 
-const apiUrl = import.meta.env.VITE_API_URL
 const tickets = ref([])
 const loading = ref(false)
 
@@ -35,7 +34,7 @@ async function openImageModal(ticket) {
 
     try {
         const data = await commercialApi.get(`/tickets/${ticket.id}/image`)
-        modalImage.value = data.imagePath ? `${apiUrl}/${data.imagePath}` : null
+        modalImage.value = data.imagePath || null
     } catch {
         modalImage.value = null
     } finally {

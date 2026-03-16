@@ -6,7 +6,6 @@ import { useCommercialsStore } from '@/stores/commercials'
 import { useTicketsStore } from '@/stores/tickets'
 import TicketsTable from '@/components/tickets/TicketsTable.vue'
 
-const apiUrl = import.meta.env.VITE_API_URL
 const route = useRoute()
 const commercialsStore = useCommercialsStore()
 const ticketsStore = useTicketsStore()
@@ -49,9 +48,10 @@ watch(selectedId, (id) => {
         <div class="profile-section">
             <img
                 v-if="commercial.profileImagePath"
-                :src="`${apiUrl}/${commercial.profileImagePath}`"
+                :src="commercial.profileImagePath"
                 alt="profile"
                 class="profile-image"
+                @error="$event.target.src = '/defaultProfile.png'"
             />
             <img v-else src="/defaultProfile.png" alt="profile" class="profile-image" />
             <div class="profile-info">

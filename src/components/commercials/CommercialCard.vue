@@ -3,8 +3,6 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-const apiUrl = import.meta.env.VITE_API_URL
-
 const props = defineProps({
     commercialId: {
         type: Number,
@@ -28,7 +26,7 @@ const props = defineProps({
     },
     image: {
         type: String,
-        default: "user profile image"
+        default: ""
     }
 })
 </script>
@@ -37,7 +35,7 @@ const props = defineProps({
     <div class="commercial-card">
         <div class="card-header">
             <div class="profile-image">
-                <img v-if="image" :src="`${apiUrl}/${image}`" alt="profile">
+                <img v-if="image" :src="image" alt="profile" @error="$event.target.src = '/defaultProfile.png'">
                 <img v-else src="/defaultProfile.png" alt="profile">
             </div>
             <div class="header">
