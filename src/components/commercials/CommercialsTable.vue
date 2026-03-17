@@ -1,36 +1,37 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useCommercialsStore } from '@/stores/commercials'
+import { storeToRefs } from 'pinia'
+import CustomSelect from '@/components/ui/CustomSelect.vue'
+
+const commercialsStore = useCommercialsStore()
+
+const { fetchCommercials, filteredCommercials } = commercialsStore
+const {isLoading, fetched} = storeToRefs(commercialsStore)
+
 
 const router = useRouter()
-
-const props = defineProps({
-    commercials: {
-        type: Array,
-        required: true,
-    },
-    loading: {
-        type: Boolean,
-        default: false,
-    },
-    skeletonRows: {
-        type: Number,
-        default: 8,
-    },
-})
 
 const searchQuery = ref('');
 const statusFilter = ref('all')
 
-function handleStatusChange(e) {
+const statusOptions = [
+    { value: 'all', label: 'All' },
+    { value: 'active', label: 'Active' },
+    { value: 'suspended', label: 'Suspended' },
+]
 
-}
-
+onMounted(() => {
+    if (!fetched.value) {
+        fetchCommercials()
+    }
+})
 </script>
 
 <template>
     <!-- Skeleton -->
-    <div v-if="loading" class="table-wrapper">
+    <div v-if="isLoading" class="table-wrapper">
         <table class="commercials-table">
             <thead>
                 <tr>
@@ -41,7 +42,7 @@ function handleStatusChange(e) {
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="i in skeletonRows" :key="i" class="skeleton-row">
+                <tr v-for="i in 8" :key="i" class="skeleton-row">
                     <td>
                         <div class="name-cell">
                             <div class="skeleton skeleton-avatar"></div>
@@ -59,11 +60,17 @@ function handleStatusChange(e) {
     <!-- Data -->
     <div v-else class="table-wrapper">
         <div class="filters">
-            <input class="search-input" type="text" placeholder="Search for commercial" @change="handleChange">
-            <select name="status" id="select-status" @change="handleChange">
-                <option value="active">active</option>
-                <option value="suspended">suspended</option>
-            </select>
+            <input 
+                class="search-input" 
+                type="text" 
+                placeholder="Search for commercial" 
+                v-model="searchQuery" 
+            />
+            <CustomSelect
+                v-model="statusFilter"
+                :options="statusOptions"
+                placeholder="Filter by status"
+            />
         </div>
         <table class="commercials-table">
             <thead>
@@ -76,7 +83,7 @@ function handleStatusChange(e) {
             </thead>
             <tbody>
                 <tr
-                    v-for="commercial in commercials"
+                    v-for="commercial in filteredCommercials(searchQuery, statusFilter)"
                     :key="commercial.id"
                     class="clickable-row"
                     @click="router.push({ name: 'commercial-details', params: { id: commercial.id } })"
@@ -118,6 +125,35 @@ function handleStatusChange(e) {
 </template>
 
 <style scoped>
+.filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+.search-input {
+    background-color: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    outline: none;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    flex: 1;
+    transition: border-color 0.2s;
+}
+
+.search-input:focus {
+    border-color: var(--primary);
+}
+
+.filters :deep(.custom-select) {
+    width: 180px;
+}
+
 .table-wrapper {
     background: var(--surface);
     border: 1px solid var(--border);

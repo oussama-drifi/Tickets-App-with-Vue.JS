@@ -12,6 +12,12 @@ export const useTicketsStore = defineStore('tickets', () => {
     const sortDir = ref('asc')  // 'asc' | 'desc'
     const fetched = ref(false)
 
+    // Filters
+    const filterStatus = ref('')
+    const filterCategory = ref('')
+    const filterDateFrom = ref('')
+    const filterDateTo = ref('')
+
     function toggleSort(field) {
         if (sortBy.value === field) {
             sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
@@ -21,10 +27,31 @@ export const useTicketsStore = defineStore('tickets', () => {
         }
     }
 
+    const filteredTickets = computed(() => {
+        let result = tickets.value
+        if (filterStatus.value) {
+            result = result.filter(t => t.status === filterStatus.value)
+        }
+        if (filterCategory.value) {
+            result = result.filter(t => t.category === filterCategory.value)
+        }
+        if (filterDateFrom.value) {
+            const from = new Date(filterDateFrom.value)
+            result = result.filter(t => new Date(t.ticketDate) >= from)
+        }
+        if (filterDateTo.value) {
+            const to = new Date(filterDateTo.value)
+            to.setHours(23, 59, 59, 999)
+            result = result.filter(t => new Date(t.ticketDate) <= to)
+        }
+        return result
+    })
+
     const sortedTickets = computed(() => {
-        if (!sortBy.value) return tickets.value
+        const base = filteredTickets.value
+        if (!sortBy.value) return base
         const dir = sortDir.value === 'asc' ? 1 : -1
-        return [...tickets.value].sort((a, b) => {
+        return [...base].sort((a, b) => {
             if (sortBy.value === 'amount') {
                 return (Number(a.amount) - Number(b.amount)) * dir
             }
@@ -82,5 +109,12 @@ export const useTicketsStore = defineStore('tickets', () => {
         }
     }
 
-    return { tickets, isLoading, error, fetched, sortBy, sortDir, sortedTickets, selectedCommercialTickets, sortedCommercialTickets, toggleSort, fetchTickets, loadCommercialTickets }
+    function clearFilters() {
+        filterStatus.value = ''
+        filterCategory.value = ''
+        filterDateFrom.value = ''
+        filterDateTo.value = ''
+    }
+
+    return { tickets, isLoading, error, fetched, sortBy, sortDir, filterStatus, filterCategory, filterDateFrom, filterDateTo, filteredTickets, sortedTickets, selectedCommercialTickets, sortedCommercialTickets, toggleSort, fetchTickets, loadCommercialTickets, clearFilters }
 })

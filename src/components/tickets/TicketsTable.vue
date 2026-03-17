@@ -57,6 +57,7 @@ const columnWidths = ref({
     amount: 120,
     date: 160,
     publisher: null,
+    category: 130,
     status: 150,
 })
 
@@ -188,6 +189,7 @@ onUnmounted(() => {
                     <th :style="colStyle('amount')">Amount<span class="resize-handle" @mousedown="onResizeStart('amount', $event)"></span></th>
                     <th :style="colStyle('date')">Date<span class="resize-handle" @mousedown="onResizeStart('date', $event)"></span></th>
                     <th :style="colStyle('publisher')">Publisher<span class="resize-handle" @mousedown="onResizeStart('publisher', $event)"></span></th>
+                    <th :style="colStyle('category')">Category<span class="resize-handle" @mousedown="onResizeStart('category', $event)"></span></th>
                     <th :style="colStyle('status')">Status<span class="resize-handle" @mousedown="onResizeStart('status', $event)"></span></th>
                 </tr>
             </thead>
@@ -198,6 +200,7 @@ onUnmounted(() => {
                     <td><div class="skeleton skeleton-short"></div></td>
                     <td><div class="skeleton skeleton-medium"></div></td>
                     <td><div class="skeleton skeleton-text"></div></td>
+                    <td><div class="skeleton skeleton-short"></div></td>
                     <td><div class="skeleton skeleton-badge"></div></td>
                 </tr>
             </tbody>
@@ -214,6 +217,7 @@ onUnmounted(() => {
                     <th :style="colStyle('amount')" class="sortable" @click="emit('sort', 'amount')"><i :class="['bi sort-icon', sortIcon('amount'), { active: sortBy === 'amount' }]"></i>Amount<span class="resize-handle" @mousedown.stop="onResizeStart('amount', $event)"></span></th>
                     <th :style="colStyle('date')" class="sortable" @click="emit('sort', 'date')"><i :class="['bi sort-icon', sortIcon('date'), { active: sortBy === 'date' }]"></i>Date<span class="resize-handle" @mousedown.stop="onResizeStart('date', $event)"></span></th>
                     <th :style="colStyle('publisher')">Publisher<span class="resize-handle" @mousedown="onResizeStart('publisher', $event)"></span></th>
+                    <th :style="colStyle('category')">Category<span class="resize-handle" @mousedown="onResizeStart('category', $event)"></span></th>
                     <th :style="colStyle('status')">Status<span class="resize-handle" @mousedown="onResizeStart('status', $event)"></span></th>
                 </tr>
             </thead>
@@ -235,6 +239,9 @@ onUnmounted(() => {
                     </td>
                     <td>
                         <span class="ticket-publisher">{{ ticket.owner?.email || '—' }}</span>
+                    </td>
+                    <td>
+                        <span class="ticket-category">{{ ticket.category }}</span>
                     </td>
                     <td>
                         <div v-if="!readonly" class="status-select" :class="{ open: openDropdown === ticket.id }">
@@ -477,6 +484,13 @@ onUnmounted(() => {
 
 .ticket-publisher {
     font-size: 13px;
+    color: var(--text-muted);
+}
+
+.ticket-category {
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: capitalize;
     color: var(--text-muted);
 }
 

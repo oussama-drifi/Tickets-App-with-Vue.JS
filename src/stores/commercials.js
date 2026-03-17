@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { adminApi } from '@/services/api'
 
 export const useCommercialsStore = defineStore('commercials', () => {
@@ -9,15 +9,14 @@ export const useCommercialsStore = defineStore('commercials', () => {
   const fetched = ref(false);
 
   const filteredCommercials = (searchQuery, status) => {
-    return computed(() => {
-      return commercials.value.filter(c => {
-        if (status === 'all') {
-          return c.name.startsWith(searchQuery)
-        }
-        return c.name.startsWith(searchQuery) && c.name.status === status
-      })
+    return commercials.value.filter(c => {
+      const matchesSearch = c.name.toLowerCase().startsWith(searchQuery.toLowerCase())
+      if (status === 'all') {
+        return matchesSearch
+      }
+      return matchesSearch && c.status === status
     })
-  } 
+  }
 
   async function fetchCommercials() {
     isLoading.value = true
@@ -33,5 +32,5 @@ export const useCommercialsStore = defineStore('commercials', () => {
   }
 
 
-  return { commercials, isLoading, error, fetchCommercials, fetched }
+  return { commercials, isLoading, error, fetchCommercials, fetched, filteredCommercials }
 })
