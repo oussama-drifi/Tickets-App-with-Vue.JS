@@ -1,7 +1,7 @@
 <script setup>
 import { useTicketsStore } from '@/stores/tickets';
 import { storeToRefs } from 'pinia';
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, watch } from 'vue';
 import TicketsTable from '@/components/tickets/TicketsTable.vue';
 
 const store = useTicketsStore()
@@ -16,6 +16,10 @@ function onStatusChange(ticket, status) {
 
 onMounted(() => {
     if (!fetched.value) fetchTickets()
+})
+
+watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
+    fetchTickets()
 })
 </script>
 
@@ -43,10 +47,9 @@ onMounted(() => {
                 <label>Category</label>
                 <select v-model="filterCategory">
                     <option value="">All categories</option>
-                    <option value="transport">Transport</option>
-                    <option value="food">Food</option>
-                    <option value="accommodation">Accommodation</option>
-                    <option value="other">Other</option>
+                    <option value="restaurant">Restaurant</option>
+                    <option value="hotel">Hotel</option>
+                    <option value="work">Work</option>
                 </select>
             </div>
             <div class="filter-group">

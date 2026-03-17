@@ -1,22 +1,38 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import { commercialApi } from '@/services/api'
 import TicketCard from '@/components/tickets/TicketCard.vue'
 
 const tickets = ref([])
 const loading = ref(false)
 
-// Image modal state
-const modalOpen = ref(false)
-const modalLoading = ref(false)
-const modalImage = ref(null)
-const modalDescription = ref('')
-const modalTitle = ref('')
+// Filters
+const filterStatus = ref('')
+const filterCategory = ref('')
+const filterDateFrom = ref('')
+const filterDateTo = ref('')
 
+const hasActiveFilters = computed(() => filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value)
+
+function clearFilters() {
+    filterStatus.value = ''
+    filterCategory.value = ''
+    filterDateFrom.value = ''
+    filterDateTo.value = ''
+}
+
+// get tickets
 async function fetchTickets() {
     loading.value = true
+    const params = new URLSearchParams()
+    if (filterStatus.value) params.set('status', filterStatus.value)
+    if (filterCategory.value) params.set('category', filterCategory.value)
+    if (filterDateFrom.value) params.set('dateFrom', filterDateFrom.value)
+    if (filterDateTo.value) params.set('dateTo', filterDateTo.value)
+    const qs = params.toString()
     try {
-        const data = await commercialApi.get('/tickets')
+        const data = await commercialApi.get(`/tickets${qs ? `?${qs}` : ''}`)
         tickets.value = data
     } catch {
         tickets.value = []
@@ -24,6 +40,13 @@ async function fetchTickets() {
         loading.value = false
     }
 }
+
+// Image modal state
+const modalOpen = ref(false)
+const modalLoading = ref(false)
+const modalImage = ref(null)
+const modalDescription = ref('')
+const modalTitle = ref('')
 
 async function openImageModal(ticket) {
     modalOpen.value = true
@@ -41,17 +64,57 @@ async function openImageModal(ticket) {
         modalLoading.value = false
     }
 }
-
 function closeModal() {
     modalOpen.value = false
 }
 
+watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
+    fetchTickets()
+})
 onMounted(() => fetchTickets())
 </script>
 
 <template>
     <div class="commercial-tickets">
-        <h2>My Tickets</h2>
+        <div class="page-header">
+            <h2>My Tickets</h2>
+            <RouterLink :to="{ name: 'commercial-new-ticket' }" class="new-ticket-btn">
+                <i class="bi bi-plus-lg"></i> New Ticket
+            </RouterLink>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>Status</label>
+                <select v-model="filterStatus">
+                    <option value="">All statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="verified">Verified</option>
+                    <option value="paid">Paid</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Category</label>
+                <select v-model="filterCategory">
+                    <option value="">All categories</option>
+                    <option value="restaurant">Restaurant</option>
+                    <option value="hotel">Hotel</option>
+                    <option value="work">Work</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>From</label>
+                <input type="date" v-model="filterDateFrom" />
+            </div>
+            <div class="filter-group">
+                <label>To</label>
+                <input type="date" v-model="filterDateTo" />
+            </div>
+            <button v-if="hasActiveFilters" class="clear-filters" @click="clearFilters">
+                <i class="bi bi-x-circle"></i> Clear
+            </button>
+        </div>
 
         <!-- Loading skeleton -->
         <div v-if="loading" class="cards-grid">
@@ -67,7 +130,10 @@ onMounted(() => fetchTickets())
                 <div class="skeleton skeleton-line short"></div>
                 <div class="skeleton-footer">
                     <div class="skeleton skeleton-line short"></div>
-                    <div class="skeleton skeleton-badge"></div>
+                    <div class="skeleton-badges">
+                        <div class="skeleton skeleton-badge"></div>
+                        <div class="skeleton skeleton-badge"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -125,10 +191,102 @@ onMounted(() => fetchTickets())
     padding: 0;
 }
 
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
 .commercial-tickets h2 {
     font-size: 20px;
     color: var(--text);
-    margin-bottom: 16px;
+    margin: 0;
+}
+
+.new-ticket-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.new-ticket-btn:hover {
+    background: var(--primary-hover);
+}
+
+/* ---- Filters ---- */
+.filters {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 150px;
+    min-width: 0;
+}
+
+.filter-group label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+.filter-group select,
+.filter-group input[type="date"] {
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    width: 100%;
+    min-width: 0;
+    transition: border-color 0.15s;
+}
+
+.filter-group select:focus,
+.filter-group input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.clear-filters {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.clear-filters:hover {
+    border-color: var(--danger);
+    color: var(--danger);
 }
 
 /* ---- Cards Grid ---- */
@@ -181,6 +339,11 @@ onMounted(() => fetchTickets())
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.skeleton-badges {
+    display: flex;
+    gap: 6px;
 }
 
 .skeleton-badge {

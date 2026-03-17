@@ -241,7 +241,17 @@ onUnmounted(() => {
                         <span class="ticket-publisher">{{ ticket.owner?.email || '—' }}</span>
                     </td>
                     <td>
-                        <span class="ticket-category">{{ ticket.category }}</span>
+                        <span class="ticket-category">
+                            <template v-if="ticket.category === 'restaurant'">
+                                <i class="bi bi-fork-knife"></i> {{ ticket.category }}
+                            </template>
+                            <template v-else-if="ticket.category === 'work'">
+                                <i class="bi bi-briefcase"></i> {{ ticket.category }}
+                            </template>
+                            <template v-else>
+                                <i class="bi bi-building"></i> {{ ticket.category }}
+                            </template>
+                        </span>
                     </td>
                     <td>
                         <div v-if="!readonly" class="status-select" :class="{ open: openDropdown === ticket.id }">

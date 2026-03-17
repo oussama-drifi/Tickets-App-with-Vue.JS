@@ -8,6 +8,12 @@ defineProps({
 
 const emit = defineEmits(['image-click'])
 
+const categoryIcon = {
+    restaurant: 'bi bi-cup-hot',
+    hotel: 'bi bi-building',
+    work: 'bi bi-briefcase',
+}
+
 function formatDate(dateStr) {
     return new Date(dateStr).toLocaleDateString('fr-FR', {
         weekday: 'short',
@@ -21,7 +27,7 @@ function formatDate(dateStr) {
 <template>
     <div class="ticket-card">
         <div class="card-header">
-            <div class="image-icon" @click="emit('image-click', ticket)">
+            <div class="image-icon" @click="emit('image-click')">
                 <i class="bi bi-image"></i>
             </div>
             <div class="header">
@@ -36,10 +42,16 @@ function formatDate(dateStr) {
         </div>
         <div class="card-footer">
             <span><i class="bi bi-currency-dollar"></i> {{ ticket.amount }} DHs</span>
-            <span class="status-badge" :class="ticket.status">
-                <span class="status-dot"></span>
-                {{ ticket.status }}
-            </span>
+            <div class="badges">
+                <span class="category-badge">
+                    <i :class="categoryIcon[ticket.category]"></i>
+                    {{ ticket.category }}
+                </span>
+                <span class="status-badge" :class="ticket.status">
+                    <span class="status-dot"></span>
+                    {{ ticket.status }}
+                </span>
+            </div>
         </div>
     </div>
 </template>
@@ -121,6 +133,28 @@ function formatDate(dateStr) {
     font-weight: 600;
     font-size: 14px;
     color: var(--text);
+}
+
+.badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ---- Category Badge ---- */
+.category-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: capitalize;
+    white-space: nowrap;
+    color: var(--text-muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
 }
 
 /* ---- Status Badge ---- */

@@ -27,31 +27,20 @@ export const useTicketsStore = defineStore('tickets', () => {
         }
     }
 
-    const filteredTickets = computed(() => {
-        let result = tickets.value
-        if (filterStatus.value) {
-            result = result.filter(t => t.status === filterStatus.value)
-        }
-        if (filterCategory.value) {
-            result = result.filter(t => t.category === filterCategory.value)
-        }
-        if (filterDateFrom.value) {
-            const from = new Date(filterDateFrom.value)
-            result = result.filter(t => new Date(t.ticketDate) >= from)
-        }
-        if (filterDateTo.value) {
-            const to = new Date(filterDateTo.value)
-            to.setHours(23, 59, 59, 999)
-            result = result.filter(t => new Date(t.ticketDate) <= to)
-        }
-        return result
-    })
+    function buildQuery() {
+        const params = new URLSearchParams()
+        if (filterStatus.value) params.set('status', filterStatus.value)
+        if (filterCategory.value) params.set('category', filterCategory.value)
+        if (filterDateFrom.value) params.set('dateFrom', filterDateFrom.value)
+        if (filterDateTo.value) params.set('dateTo', filterDateTo.value)
+        const qs = params.toString()
+        return qs ? `?${qs}` : ''
+    }
 
     const sortedTickets = computed(() => {
-        const base = filteredTickets.value
-        if (!sortBy.value) return base
+        if (!sortBy.value) return tickets.value
         const dir = sortDir.value === 'asc' ? 1 : -1
-        return [...base].sort((a, b) => {
+        return [...tickets.value].sort((a, b) => {
             if (sortBy.value === 'amount') {
                 return (Number(a.amount) - Number(b.amount)) * dir
             }
@@ -67,7 +56,7 @@ export const useTicketsStore = defineStore('tickets', () => {
         isLoading.value = true
         error.value = null
         try {
-            tickets.value = await adminApi.get('/tickets')
+            tickets.value = await adminApi.get(`/tickets${buildQuery()}`)
             fetched.value = true
         } catch (err) {
             error.value = err.message
@@ -93,14 +82,10 @@ export const useTicketsStore = defineStore('tickets', () => {
     })
 
     async function loadCommercialTickets(commercialId) {
-        if (fetched.value) {
-            selectedCommercialTickets.value = tickets.value.filter(t => t.userId === commercialId)
-            return
-        }
         isLoading.value = true
         error.value = null
         try {
-            selectedCommercialTickets.value = await adminApi.get(`/commercials/${commercialId}/tickets`)
+            selectedCommercialTickets.value = await adminApi.get(`/commercials/${commercialId}/tickets${buildQuery()}`)
         } catch (err) {
             error.value = err.message
             selectedCommercialTickets.value = []
@@ -116,5 +101,5 @@ export const useTicketsStore = defineStore('tickets', () => {
         filterDateTo.value = ''
     }
 
-    return { tickets, isLoading, error, fetched, sortBy, sortDir, filterStatus, filterCategory, filterDateFrom, filterDateTo, filteredTickets, sortedTickets, selectedCommercialTickets, sortedCommercialTickets, toggleSort, fetchTickets, loadCommercialTickets, clearFilters }
+    return { tickets, isLoading, error, fetched, sortBy, sortDir, filterStatus, filterCategory, filterDateFrom, filterDateTo, sortedTickets, selectedCommercialTickets, sortedCommercialTickets, toggleSort, fetchTickets, loadCommercialTickets, clearFilters }
 })

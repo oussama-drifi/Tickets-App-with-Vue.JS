@@ -10,7 +10,7 @@ const route = useRoute()
 const commercialsStore = useCommercialsStore()
 const ticketsStore = useTicketsStore()
 
-const { isLoading, sortBy, sortDir, sortedCommercialTickets } = storeToRefs(ticketsStore)
+const { isLoading, sortBy, sortDir, sortedCommercialTickets, filterStatus, filterCategory, filterDateFrom, filterDateTo } = storeToRefs(ticketsStore)
 const { commercials } = storeToRefs(commercialsStore)
 
 const selectedId = computed(() => {
@@ -21,6 +21,8 @@ const commercial = computed(() => {
     if (!selectedId.value) return null
     return commercials.value.find(c => c.id === selectedId.value) || null
 })
+
+const hasActiveFilters = computed(() => filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value)
 
 function onStatusChange(ticket, status) {
     ticket.status = status
@@ -34,6 +36,10 @@ watch(selectedId, (id) => {
     if (!id) return
     ticketsStore.loadCommercialTickets(id)
 }, { immediate: true })
+
+watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
+    if (selectedId.value) ticketsStore.loadCommercialTickets(selectedId.value)
+})
 
 </script>
 
@@ -63,6 +69,38 @@ watch(selectedId, (id) => {
 
         <div class="tickets-section">
             <h4>Tickets</h4>
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select v-model="filterStatus">
+                        <option value="">All statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="verified">Verified</option>
+                        <option value="paid">Paid</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Category</label>
+                    <select v-model="filterCategory">
+                        <option value="">All categories</option>
+                        <option value="restaurant">Restaurant</option>
+                        <option value="hotel">Hotel</option>
+                        <option value="work">Work</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>From</label>
+                    <input type="date" v-model="filterDateFrom" />
+                </div>
+                <div class="filter-group">
+                    <label>To</label>
+                    <input type="date" v-model="filterDateTo" />
+                </div>
+                <button v-if="hasActiveFilters" class="clear-filters" @click="ticketsStore.clearFilters()">
+                    <i class="bi bi-x-circle"></i> Clear
+                </button>
+            </div>
             <TicketsTable
                 v-if="sortedCommercialTickets.length || isLoading"
                 :tickets="sortedCommercialTickets"
@@ -195,6 +233,69 @@ watch(selectedId, (id) => {
 .no-tickets {
     color: var(--text-muted);
     font-size: 14px;
+}
+
+/* ---- Filters ---- */
+.filters {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.filter-group label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+.filter-group select,
+.filter-group input[type="date"] {
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    min-width: 150px;
+    transition: border-color 0.15s;
+}
+
+.filter-group select:focus,
+.filter-group input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.clear-filters {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.clear-filters:hover {
+    border-color: var(--danger);
+    color: var(--danger);
 }
 .not-found i {
     color: var(--danger);

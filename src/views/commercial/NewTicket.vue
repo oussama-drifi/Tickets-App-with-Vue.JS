@@ -1,53 +1,53 @@
 <script setup>
 import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import { commercialApi } from '@/services/api'
 
-const form = reactive({
-    title: '',
-    description: '',
-    amount: '',
-    ticketDate: ''
-})
-
-const imageFile = ref(null)
-const isDragging = ref(false)
-const submitting = ref(false)
-const fileInput = ref(null)
-const toast = ref(null)
-
-function resetForm() {
-    form.title = ''
-    form.description = ''
-    form.amount = ''
-    form.ticketDate = ''
-    removeImage()
-}
+const router = useRouter()
 
 function showToast(type, message) {
     toast.value = { type, message }
     setTimeout(() => toast.value = null, 4000)
 }
 
+// form data 
+const imageFile = ref(null)
+const isDragging = ref(false)
+const submitting = ref(false)
+const fileInput = ref(null)
+const toast = ref(null)
+const categories = [
+    { value: 'restaurant', label: 'Restaurant' },
+    { value: 'hotel', label: 'Hotel' },
+    { value: 'work', label: 'Work' },
+]
+const form = reactive({
+    title: '',
+    description: '',
+    amount: '',
+    ticketDate: '',
+    category: ''
+})
+
+// DropeZone
 function triggerFileInput() {
     fileInput.value.click()
 }
-
 function handleFileSelect(e) {
     const file = e.target.files[0]
     if (file) imageFile.value = file
 }
-
 function handleDrop(e) {
     isDragging.value = false
     const file = e.dataTransfer.files[0]
     if (file && file.type.startsWith('image/')) imageFile.value = file
 }
-
 function removeImage() {
     imageFile.value = null
     if (fileInput.value) fileInput.value.value = ''
 }
 
+// form submition Logic
 async function handleSubmit() {
     submitting.value = true
     try {
@@ -55,12 +55,12 @@ async function handleSubmit() {
         formData.append('title', form.title)
         formData.append('amount', form.amount)
         formData.append('ticketDate', form.ticketDate)
+        formData.append('category', form.category)
         if (form.description) formData.append('description', form.description)
         if (imageFile.value) formData.append('image', imageFile.value)
 
         await commercialApi.post('/tickets', formData)
-        resetForm()
-        showToast('success', 'Ticket created successfully')
+        router.push({ name: 'commercial-tickets' })
     } catch (err) {
         showToast('error', err.message)
     } finally {
@@ -86,9 +86,19 @@ async function handleSubmit() {
                 </div>
             </div>
 
-            <div class="floating-field">
-                <input id="ticket-date" v-model="form.ticketDate" type="date" placeholder=" " required />
-                <label for="ticket-date"><i class="bi bi-calendar3"></i> Ticket Date</label>
+            <div class="form-row">
+                <div class="floating-field">
+                    <input id="ticket-date" v-model="form.ticketDate" type="date" placeholder=" " required />
+                    <label for="ticket-date"><i class="bi bi-calendar3"></i> Ticket Date</label>
+                </div>
+
+                <div class="floating-field">
+                    <select id="ticket-category" v-model="form.category" required>
+                        <option value="" disabled hidden></option>
+                        <option v-for="cat in categories" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
+                    </select>
+                    <label for="ticket-category"><i class="bi bi-grid"></i> Category</label>
+                </div>
             </div>
 
             <div class="floating-field">
@@ -167,7 +177,8 @@ async function handleSubmit() {
 }
 
 .floating-field input,
-.floating-field textarea {
+.floating-field textarea,
+.floating-field select {
     width: 100%;
     padding: 24px 14px 8px;
     font-size: 0.9rem;
@@ -182,8 +193,14 @@ async function handleSubmit() {
     box-sizing: border-box;
 }
 
+.floating-field select {
+    appearance: none;
+    cursor: pointer;
+}
+
 .floating-field input:focus,
-.floating-field textarea:focus {
+.floating-field textarea:focus,
+.floating-field select:focus {
     border-color: var(--primary);
 }
 
@@ -221,7 +238,8 @@ async function handleSubmit() {
     color: var(--primary);
 }
 
-/* Date input always has value, so always float */
+/* Date & select inputs: always float label */
+.floating-field select ~ label,
 .floating-field input[type="date"] ~ label {
     top: 8px;
     transform: none;
