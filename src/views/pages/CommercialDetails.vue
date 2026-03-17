@@ -1,10 +1,13 @@
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useCommercialsStore } from '@/stores/commercials'
 import { useTicketsStore } from '@/stores/tickets'
 import TicketsTable from '@/components/tickets/TicketsTable.vue'
+import StatusFilter from '@/components/ui/StatusFilter.vue'
+import CategoryFilter from '@/components/ui/CategoryFilter.vue'
+import EditCommercialModal from '@/components/commercials/EditCommercialModal.vue'
 
 const route = useRoute()
 const commercialsStore = useCommercialsStore()
@@ -12,6 +15,14 @@ const ticketsStore = useTicketsStore()
 
 const { isLoading, sortBy, sortDir, sortedCommercialTickets, filterStatus, filterCategory, filterDateFrom, filterDateTo } = storeToRefs(ticketsStore)
 const { commercials } = storeToRefs(commercialsStore)
+
+const editModalOpen = ref(false)
+
+function onCommercialUpdated(updated) {
+    const idx = commercials.value.findIndex(c => c.id === updated.id)
+    if (idx !== -1) Object.assign(commercials.value[idx], updated)
+    editModalOpen.value = false
+}
 
 const selectedId = computed(() => {
     return route.params.id ? Number(route.params.id) : null
@@ -30,6 +41,10 @@ function onStatusChange(ticket, status) {
 
 onMounted(() => {
     if (!commercials.value.length) commercialsStore.fetchCommercials()
+})
+
+onUnmounted(() => {
+    ticketsStore.clearFilters()
 })
 
 watch(selectedId, (id) => {
@@ -61,7 +76,11 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
             />
             <img v-else src="/defaultProfile.png" alt="profile" class="profile-image" />
             <div class="profile-info">
-                <h2>{{ commercial.name }} <span class="status" :class="commercial.status"><i class="bi bi-activity"></i> {{ commercial.status }}</span> </h2>
+                <div class="name-row">
+                    <h2>{{ commercial.name }}</h2>
+                    <span class="status" :class="commercial.status"><i class="bi bi-activity"></i> {{ commercial.status }}</span>
+                    <button class="edit-btn" @click="editModalOpen = true"><i class="bi bi-pencil-square"></i> Edit</button>
+                </div>
                 <span class="email"><i class="bi bi-envelope"></i> <b>Email:</b> {{ commercial.email }}</span>        
                 <p><i class="bi bi-highlighter"></i> <b>Bio:</b> {{ commercial.bio || '_' }}</p>
             </div>
@@ -72,22 +91,11 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
             <div class="filters">
                 <div class="filter-group">
                     <label>Status</label>
-                    <select v-model="filterStatus">
-                        <option value="">All statuses</option>
-                        <option value="pending">Pending</option>
-                        <option value="verified">Verified</option>
-                        <option value="paid">Paid</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
+                    <StatusFilter v-model="filterStatus" />
                 </div>
                 <div class="filter-group">
                     <label>Category</label>
-                    <select v-model="filterCategory">
-                        <option value="">All categories</option>
-                        <option value="restaurant">Restaurant</option>
-                        <option value="hotel">Hotel</option>
-                        <option value="work">Work</option>
-                    </select>
+                    <CategoryFilter v-model="filterCategory" />
                 </div>
                 <div class="filter-group">
                     <label>From</label>
@@ -115,6 +123,13 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
                 No tickets found for this commercial.
             </p>
         </div>
+
+        <EditCommercialModal
+            :open="editModalOpen"
+            :commercial="commercial"
+            @close="editModalOpen = false"
+            @updated="onCommercialUpdated"
+        />
     </div>
 
     <div v-else class="not-found">
@@ -186,11 +201,15 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
             display: flex;
             flex-direction: column;
 
-            h2 {
-                font-size: 25px;
-                color: var(--text-muted);
-                position: relative;
-                width: fit-content;
+            .name-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+
+                h2 {
+                    font-size: 25px;
+                    color: var(--text-muted);
+                }
             }
             .email {
                 color: var(--text-muted);
@@ -200,13 +219,8 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
                 font-size: 13px;
                 font-weight: 600;
                 text-transform: capitalize;
-                width: fit-content;
-                padding: 3px;
-                border-radius: 4px;
-                position: absolute;
-                right: 0;
-                top: 50%;
-                transform: translate(calc(100% + 15px), -50%);
+                white-space: nowrap;
+                padding: 3px 6px;
                 border-width: 1px;
                 border-style: solid;
                 border-radius: 4px;
@@ -222,6 +236,29 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
             margin-bottom: 12px;
         }
     }
+}
+
+/* edit button */
+.edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: all 0.15s;
+}
+
+.edit-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
 }
 
 /* status states */
@@ -259,7 +296,6 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
     opacity: 0.6;
 }
 
-.filter-group select,
 .filter-group input[type="date"] {
     padding: 7px 12px;
     border: 1px solid var(--border);
@@ -272,7 +308,6 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
     transition: border-color 0.15s;
 }
 
-.filter-group select:focus,
 .filter-group input[type="date"]:focus {
     outline: none;
     border-color: var(--primary);

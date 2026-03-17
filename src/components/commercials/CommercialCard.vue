@@ -4,30 +4,12 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const props = defineProps({
-    commercialId: {
-        type: Number,
-        default: 0,
-    }, 
-    name: {
-        type: String,
-        default: "username"
-    },
-    email: {
-        type: String,
-        default: "user email"
-    },
-    bio: {
-        type: String,
-        default: "user bio"
-    },
-    status: {
-        type: String,
-        default: "user status"
-    },
-    image: {
-        type: String,
-        default: ""
-    }
+    commercialId: { type: Number, default: 0 }, 
+    name: { type: String, default: "username" },
+    email: { type: String, default: "user email" },
+    bio: { type: String, default: "user bio" },
+    status: { type: String, default: "user status" },
+    image: { type: String, default: "" }
 })
 </script>
 

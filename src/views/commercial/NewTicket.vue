@@ -71,7 +71,7 @@ async function handleSubmit() {
 
 <template>
     <div class="new-ticket">
-        <h2 class="page-title">New Ticket</h2>
+        <h2 class="page-title"><i class="bi bi-plus-lg"></i> new Ticket</h2>
 
         <form class="form" @submit.prevent="handleSubmit">
             <div class="form-row">

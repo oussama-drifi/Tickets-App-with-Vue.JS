@@ -2,16 +2,14 @@
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCommercialsStore } from '@/stores/commercials'
-import { storeToRefs } from 'pinia'
 import NavBar from '@/components/layout/NavBar.vue'
-import CustomSelect from '@/components/ui/CustomSelect.vue'
+import CommercialSearch from '@/components/ui/CommercialSearch.vue'
 import NewCommercial from '@/components/commercials/NewCommercial.vue'
 import { RouterView } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
 const commercialsStore = useCommercialsStore()
-const { commercials } = storeToRefs(commercialsStore)
 
 const drawerOpen = ref(false)
 
@@ -20,10 +18,6 @@ const isDetailsPage = computed(() => route.name === 'commercial-details')
 const selectedId = computed(() => {
     return route.params.id ? Number(route.params.id) : null
 })
-
-const commercialOptions = computed(() =>
-    commercials.value.map(c => ({ value: c.id, label: c.name }))
-)
 
 function onSelectCommercial(id) {
     if (id) {
@@ -43,11 +37,10 @@ function onCommercialCreated() {
     <div class="commercials-toolbar">
         <div class="toolbar-left">
             <NavBar />
-            <CustomSelect
+            <CommercialSearch
                 v-if="isDetailsPage"
-                :options="commercialOptions"
                 :model-value="selectedId"
-                placeholder="-- Choose a commercial --"
+                placeholder="Search commercial..."
                 @update:model-value="onSelectCommercial"
             />
         </div>
@@ -106,6 +99,7 @@ function onCommercialCreated() {
 .toolbar-left {
     display: flex;
     align-items: center;
+    gap: 12px;
 }
 .toolbar-right {
     margin-right: 10px;

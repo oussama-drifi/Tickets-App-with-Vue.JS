@@ -4,7 +4,7 @@
     <header>
         <nav class="nav-bar">
             <RouterLink :to="{ name: 'commercial-all' }" class="nav-link">
-                <i class="bi bi-card-list"></i> all <span>commercials</span>
+                <i class="bi bi-card-list"></i> <span>all commercials</span>
             </RouterLink>
             <RouterLink :to="{ name: 'commercial-details' }" class="nav-link">
                 <i class="bi bi-info-circle"></i> <span>commercial details</span>
@@ -34,12 +34,12 @@
 
     &::after {
         content: "";
-        position: relative;
-        display: inline-block;
+        position: absolute;
+        display: block;
         width: 100%;
         height: 3px;
         left: 0;
-        top: -10px;
+        bottom: 0;
         border-radius: 90px;
         background-color: var(--primary);
         opacity: 0;

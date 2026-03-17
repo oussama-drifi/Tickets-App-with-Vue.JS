@@ -5,54 +5,54 @@ const routes = [
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/views/LoginView.vue')
+    component: () => import('@/views/pages/LoginView.vue')
   },
   {
     path: '/admin',
     name: 'admin',
-    component: () => import('@/views/AdminView.vue'),
+    component: () => import('@/views/admin/AdminView.vue'),
     redirect: { name: 'dashboard' },
     meta: { requiresAuth: true, role: 'admin' },
     children: [
       {
         path: 'dashboard',
         name: 'dashboard',
-        component: () => import('@/views/Dashboard.vue')
+        component: () => import('@/views/pages/Dashboard.vue')
       },
       {
         path: 'commercials',
         name: 'commercials',
-        component: () => import('@/views/Commercials.vue'),
+        component: () => import('@/views/pages/Commercials.vue'),
         redirect: { name: 'commercial-all' },
         children: [
           {
             path: 'all',
             name: 'commercial-all',
-            component: () => import('@/views/AllCommercials.vue')
+            component: () => import('@/views/pages/AllCommercials.vue')
           },
           {
             path: 'details/:id?',
             name: 'commercial-details',
-            component: () => import('@/views/CommercialDetails.vue')
+            component: () => import('@/views/pages/CommercialDetails.vue')
           }
         ]
       },
       {
         path: 'tickets',
         name: 'tickets',
-        component: () => import('@/views/Tickets.vue')
+        component: () => import('@/views/pages/Tickets.vue')
       },
       {
         path: 'settings',
         name: 'settings',
-        component: () => import('@/views/Settings.vue')
+        component: () => import('@/views/pages/Settings.vue')
       }
     ]
   },
   {
     path: '/commercial',
     name: 'commercial',
-    component: () => import('@/views/CommercialView.vue'),
+    component: () => import('@/views/commercial/CommercialView.vue'),
     redirect: { name: 'commercial-tickets' },
     meta: { requiresAuth: true, role: 'commercial' },
     children: [

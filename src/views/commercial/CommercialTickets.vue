@@ -3,6 +3,9 @@ import { onMounted, ref, computed, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { commercialApi } from '@/services/api'
 import TicketCard from '@/components/tickets/TicketCard.vue'
+import ImageModal from '@/components/ui/ImageModal.vue'
+import StatusFilter from '@/components/ui/StatusFilter.vue'
+import CategoryFilter from '@/components/ui/CategoryFilter.vue'
 
 const tickets = ref([])
 const loading = ref(false)
@@ -86,22 +89,11 @@ onMounted(() => fetchTickets())
         <div class="filters">
             <div class="filter-group">
                 <label>Status</label>
-                <select v-model="filterStatus">
-                    <option value="">All statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="verified">Verified</option>
-                    <option value="paid">Paid</option>
-                    <option value="rejected">Rejected</option>
-                </select>
+                <StatusFilter v-model="filterStatus" />
             </div>
             <div class="filter-group">
                 <label>Category</label>
-                <select v-model="filterCategory">
-                    <option value="">All categories</option>
-                    <option value="restaurant">Restaurant</option>
-                    <option value="hotel">Hotel</option>
-                    <option value="work">Work</option>
-                </select>
+                <CategoryFilter v-model="filterCategory" />
             </div>
             <div class="filter-group">
                 <label>From</label>
@@ -155,35 +147,14 @@ onMounted(() => fetchTickets())
         </div>
     </div>
 
-    <!-- Image & Description Modal -->
-    <Teleport to="body">
-        <Transition name="modal-fade">
-            <div v-if="modalOpen" class="modal-overlay" @click.self="closeModal">
-                <div class="modal-content">
-                    <button class="modal-close" @click="closeModal">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                    <h3 class="modal-title">{{ modalTitle }}</h3>
-
-                    <div v-if="modalLoading" class="modal-loading">
-                        <div class="spinner"></div>
-                    </div>
-
-                    <template v-else>
-                        <div class="modal-image-wrapper">
-                            <img v-if="modalImage" :src="modalImage" alt="Ticket image" class="modal-image" />
-                            <div v-else class="modal-no-image">
-                                <i class="bi bi-image"></i>
-                                <span>No image available</span>
-                            </div>
-                        </div>
-                        <p v-if="modalDescription" class="modal-description">{{ modalDescription }}</p>
-                        <p v-else class="modal-description muted">No description.</p>
-                    </template>
-                </div>
-            </div>
-        </Transition>
-    </Teleport>
+    <ImageModal
+        :open="modalOpen"
+        :loading="modalLoading"
+        :title="modalTitle"
+        :image="modalImage"
+        :description="modalDescription"
+        @close="closeModal"
+    />
 </template>
 
 <style scoped>
@@ -236,8 +207,6 @@ onMounted(() => fetchTickets())
     display: flex;
     flex-direction: column;
     gap: 4px;
-    flex: 1 1 150px;
-    min-width: 0;
 }
 
 .filter-group label {
@@ -249,7 +218,6 @@ onMounted(() => fetchTickets())
     opacity: 0.6;
 }
 
-.filter-group select,
 .filter-group input[type="date"] {
     padding: 7px 12px;
     border: 1px solid var(--border);
@@ -263,7 +231,6 @@ onMounted(() => fetchTickets())
     transition: border-color 0.15s;
 }
 
-.filter-group select:focus,
 .filter-group input[type="date"]:focus {
     outline: none;
     border-color: var(--primary);
@@ -390,141 +357,18 @@ onMounted(() => fetchTickets())
 
 /* ---- Responsive ---- */
 @media (max-width: 768px) {
+    .filters {
+        gap: 10px;
+    }
+
+    .filter-group {
+        flex: 1 1 calc(50% - 10px);
+        min-width: 0;
+    }
+
     .cards-grid {
         grid-template-columns: 1fr;
     }
 }
 </style>
 
-<!-- Non-scoped styles for teleported modal -->
-<style>
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-    transition: opacity 0.25s ease;
-}
-.modal-fade-enter-active .modal-content,
-.modal-fade-leave-active .modal-content {
-    transition: transform 0.25s ease, opacity 0.25s ease;
-}
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-    opacity: 0;
-}
-.modal-fade-enter-from .modal-content,
-.modal-fade-leave-to .modal-content {
-    transform: scale(0.95) translateY(10px);
-    opacity: 0;
-}
-
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-}
-
-.modal-content {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-    max-width: 520px;
-    width: 90%;
-    max-height: 85vh;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
-}
-
-.modal-close {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    background: none;
-    border: none;
-    font-size: 18px;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: background 0.15s, color 0.15s;
-}
-.modal-close:hover {
-    background: var(--bg);
-    color: var(--text);
-}
-
-.modal-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 18px;
-    padding-right: 30px;
-}
-
-.modal-loading {
-    display: flex;
-    justify-content: center;
-    padding: 40px 0;
-}
-
-.spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-.modal-image-wrapper {
-    border-radius: 12px;
-    overflow: hidden;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    margin-bottom: 16px;
-}
-
-.modal-image {
-    width: 100%;
-    display: block;
-    object-fit: contain;
-    max-height: 400px;
-}
-
-.modal-no-image {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 48px 0;
-    color: var(--text-muted);
-    opacity: 0.5;
-}
-.modal-no-image i {
-    font-size: 32px;
-}
-.modal-no-image span {
-    font-size: 14px;
-}
-
-.modal-description {
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--text);
-}
-.modal-description.muted {
-    color: var(--text-muted);
-    opacity: 0.6;
-    font-style: italic;
-}
-</style>

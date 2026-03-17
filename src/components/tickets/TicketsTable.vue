@@ -1,37 +1,23 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
 import { adminApi } from '@/services/api';
+import ImageModal from '@/components/ui/ImageModal.vue';
 
 const props = defineProps({
-    tickets: {
-        type: Array,
-        required: true,
-    },
-    loading: {
-        type: Boolean,
-        default: false,
-    },
-    skeletonRows: {
-        type: Number,
-        default: 6,
-    },
-    sortBy: {
-        type: String,
-        default: null,
-    },
-    sortDir: {
-        type: String,
-        default: 'asc',
-    },
-    api: {
-        type: Object,
-        default: () => adminApi,
-    },
-    readonly: {
-        type: Boolean,
-        default: false,
-    }
+    tickets: { type: Array, required: true },
+    loading: { type: Boolean, default: false },
+    skeletonRows: { type: Number, default: 6 },
+    sortBy: { type: String, default: null },
+    sortDir: { type: String, default: 'asc'},
+    api: { type: Object, default: () => adminApi },
+    readonly: { type: Boolean, default: false }
 })
+const categoryIcon = {
+    restaurant: 'bi bi-cup-hot',
+    hotel: 'bi bi-building',
+    work: 'bi bi-briefcase',
+}
+const statuses = ['pending', 'verified', 'paid', 'rejected']
 
 const emit = defineEmits(['status-change', 'sort'])
 
@@ -39,8 +25,15 @@ function sortIcon(field) {
     if (props.sortBy !== field) return 'bi-arrow-down-up'
     return props.sortDir === 'asc' ? 'bi-sort-up' : 'bi-sort-down'
 }
+function formatDate(dateStr) {
+    return new Date(dateStr).toLocaleDateString('us-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    })
+}
 
-const statuses = ['pending', 'verified', 'paid', 'rejected']
 const openDropdown = ref(null)
 const dropdownPos = ref({ top: 0, left: 0 })
 const tableWrapper = ref(null)
@@ -82,7 +75,6 @@ function onResizeStart(col, e) {
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onMouseUp)
 }
-
 function colStyle(col) {
     const w = columnWidths.value[col]
     return w ? { width: w + 'px', minWidth: w + 'px' } : {}
@@ -124,15 +116,6 @@ async function selectStatus(ticket, status) {
     }
 }
 
-function formatDate(dateStr) {
-    return new Date(dateStr).toLocaleDateString('fr-FR', {
-        weekday: 'short',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    })
-}
-
 // Image modal state
 const modalOpen = ref(false)
 const modalLoading = ref(false)
@@ -171,7 +154,6 @@ onMounted(() => {
     document.addEventListener('click', closeDropdowns)
     tableWrapper.value?.addEventListener('scroll', onScroll)
 })
-
 onUnmounted(() => {
     document.removeEventListener('click', closeDropdowns)
     tableWrapper.value?.removeEventListener('scroll', onScroll)
@@ -242,15 +224,7 @@ onUnmounted(() => {
                     </td>
                     <td>
                         <span class="ticket-category">
-                            <template v-if="ticket.category === 'restaurant'">
-                                <i class="bi bi-fork-knife"></i> {{ ticket.category }}
-                            </template>
-                            <template v-else-if="ticket.category === 'work'">
-                                <i class="bi bi-briefcase"></i> {{ ticket.category }}
-                            </template>
-                            <template v-else>
-                                <i class="bi bi-building"></i> {{ ticket.category }}
-                            </template>
+                            <i :class="categoryIcon[ticket.category]"></i> {{ ticket.category }}
                         </span>
                     </td>
                     <td>
@@ -292,35 +266,14 @@ onUnmounted(() => {
         </div>
     </Teleport>
 
-    <!-- Image & Description Modal -->
-    <Teleport to="body">
-        <Transition name="modal-fade">
-            <div v-if="modalOpen" class="modal-overlay" @click.self="closeModal">
-                <div class="modal-content">
-                    <button class="modal-close" @click="closeModal">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                    <h3 class="modal-title">{{ modalTitle }}</h3>
-
-                    <div v-if="modalLoading" class="modal-loading">
-                        <div class="spinner"></div>
-                    </div>
-
-                    <template v-else>
-                        <div class="modal-image-wrapper">
-                            <img v-if="modalImage" :src="modalImage" alt="Ticket image" class="modal-image" />
-                            <div v-else class="modal-no-image">
-                                <i class="bi bi-image"></i>
-                                <span>No image available</span>
-                            </div>
-                        </div>
-                        <p v-if="modalDescription" class="modal-description">{{ modalDescription }}</p>
-                        <p v-else class="modal-description muted">No description.</p>
-                    </template>
-                </div>
-            </div>
-        </Transition>
-    </Teleport>
+    <ImageModal
+        :open="modalOpen"
+        :loading="modalLoading"
+        :title="modalTitle"
+        :image="modalImage"
+        :description="modalDescription"
+        @close="closeModal"
+    />
 </template>
 
 <style scoped>
@@ -680,136 +633,5 @@ onUnmounted(() => {
     margin-left: auto;
     font-size: 14px;
     color: var(--primary);
-}
-
-/* ---- Image Modal ---- */
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-    transition: opacity 0.25s ease;
-}
-.modal-fade-enter-active .modal-content,
-.modal-fade-leave-active .modal-content {
-    transition: transform 0.25s ease, opacity 0.25s ease;
-}
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-    opacity: 0;
-}
-.modal-fade-enter-from .modal-content,
-.modal-fade-leave-to .modal-content {
-    transform: scale(0.95) translateY(10px);
-    opacity: 0;
-}
-
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-}
-
-.modal-content {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-    max-width: 520px;
-    width: 90%;
-    max-height: 85vh;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
-}
-
-.modal-close {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    background: none;
-    border: none;
-    font-size: 18px;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: background 0.15s, color 0.15s;
-}
-.modal-close:hover {
-    background: var(--bg);
-    color: var(--text);
-}
-
-.modal-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 18px;
-    padding-right: 30px;
-}
-
-.modal-loading {
-    display: flex;
-    justify-content: center;
-    padding: 40px 0;
-}
-
-.spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-.modal-image-wrapper {
-    border-radius: 12px;
-    overflow: hidden;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    margin-bottom: 16px;
-}
-
-.modal-image {
-    width: 100%;
-    display: block;
-    object-fit: contain;
-    max-height: 400px;
-}
-
-.modal-no-image {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 48px 0;
-    color: var(--text-muted);
-    opacity: 0.5;
-}
-.modal-no-image i {
-    font-size: 32px;
-}
-.modal-no-image span {
-    font-size: 14px;
-}
-
-.modal-description {
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--text);
-}
-.modal-description.muted {
-    color: var(--text-muted);
-    opacity: 0.6;
-    font-style: italic;
 }
 </style>

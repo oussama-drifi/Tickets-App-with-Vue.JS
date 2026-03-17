@@ -6,12 +6,11 @@ import { storeToRefs } from 'pinia'
 import CustomSelect from '@/components/ui/CustomSelect.vue'
 
 const commercialsStore = useCommercialsStore()
+const router = useRouter()
 
 const { fetchCommercials, filteredCommercials } = commercialsStore
 const {isLoading, fetched} = storeToRefs(commercialsStore)
 
-
-const router = useRouter()
 
 const searchQuery = ref('');
 const statusFilter = ref('all')
@@ -27,6 +26,7 @@ onMounted(() => {
         fetchCommercials()
     }
 })
+
 </script>
 
 <template>
@@ -58,13 +58,13 @@ onMounted(() => {
     </div>
 
     <!-- Data -->
-    <div v-else class="table-wrapper">
+    <div v-else>
         <div class="filters">
-            <input 
-                class="search-input" 
-                type="text" 
-                placeholder="Search for commercial" 
-                v-model="searchQuery" 
+            <input
+                class="search-input"
+                type="text"
+                placeholder="Search for commercial"
+                v-model="searchQuery"
             />
             <CustomSelect
                 v-model="statusFilter"
@@ -72,10 +72,11 @@ onMounted(() => {
                 placeholder="Filter by status"
             />
         </div>
+        <div class="table-wrapper">
         <table class="commercials-table">
             <thead>
                 <tr>
-                    <th>Name</th>
+                    <th>Commercial</th>
                     <th>Email</th>
                     <th>Status</th>
                     <th>Tickets</th>
@@ -121,6 +122,7 @@ onMounted(() => {
                 </tr>
             </tbody>
         </table>
+        </div>
     </div>
 </template>
 
@@ -129,8 +131,9 @@ onMounted(() => {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--border);
+    margin-top: 14px;
+    margin-bottom: 14px;
+    width: fit-content;
 }
 
 .search-input {
@@ -142,7 +145,6 @@ onMounted(() => {
     color: var(--text);
     font-size: 14px;
     font-family: inherit;
-    flex: 1;
     transition: border-color 0.2s;
 }
 

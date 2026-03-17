@@ -1,8 +1,10 @@
 <script setup>
 import { useTicketsStore } from '@/stores/tickets';
 import { storeToRefs } from 'pinia';
-import { onMounted, computed, watch } from 'vue';
+import { onMounted, onUnmounted, computed, watch } from 'vue';
 import TicketsTable from '@/components/tickets/TicketsTable.vue';
+import StatusFilter from '@/components/ui/StatusFilter.vue';
+import CategoryFilter from '@/components/ui/CategoryFilter.vue';
 
 const store = useTicketsStore()
 const { isLoading, error, tickets, sortedTickets, sortBy, sortDir, fetched, filterStatus, filterCategory, filterDateFrom, filterDateTo } = storeToRefs(store)
@@ -16,6 +18,10 @@ function onStatusChange(ticket, status) {
 
 onMounted(() => {
     if (!fetched.value) fetchTickets()
+})
+
+onUnmounted(() => {
+    clearFilters()
 })
 
 watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
@@ -35,22 +41,11 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
         <div class="filters">
             <div class="filter-group">
                 <label>Status</label>
-                <select v-model="filterStatus">
-                    <option value="">All statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="verified">Verified</option>
-                    <option value="paid">Paid</option>
-                    <option value="rejected">Rejected</option>
-                </select>
+                <StatusFilter v-model="filterStatus" />
             </div>
             <div class="filter-group">
                 <label>Category</label>
-                <select v-model="filterCategory">
-                    <option value="">All categories</option>
-                    <option value="restaurant">Restaurant</option>
-                    <option value="hotel">Hotel</option>
-                    <option value="work">Work</option>
-                </select>
+                <CategoryFilter v-model="filterCategory" />
             </div>
             <div class="filter-group">
                 <label>From</label>
@@ -167,7 +162,6 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
     opacity: 0.6;
 }
 
-.filter-group select,
 .filter-group input[type="date"] {
     padding: 7px 12px;
     border: 1px solid var(--border);
@@ -180,7 +174,6 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
     transition: border-color 0.15s;
 }
 
-.filter-group select:focus,
 .filter-group input[type="date"]:focus {
     outline: none;
     border-color: var(--primary);
@@ -215,7 +208,6 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
         gap: 10px;
     }
 
-    .filter-group select,
     .filter-group input[type="date"] {
         min-width: 120px;
     }

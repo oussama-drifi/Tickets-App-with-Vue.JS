@@ -1,8 +1,7 @@
 <script setup>
 import SideBar from '@/components/layout/SideBar.vue';
-import Main from '../components/layout/Main.vue';
+import Main from '@/components/layout/Main.vue';
 </script>
-
 
 <template>
     <div class="main-container">

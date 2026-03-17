@@ -31,6 +31,5 @@ export const useCommercialsStore = defineStore('commercials', () => {
     }
   }
 
-
   return { commercials, isLoading, error, fetchCommercials, fetched, filteredCommercials }
 })

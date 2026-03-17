@@ -51,7 +51,6 @@ export const useTicketsStore = defineStore('tickets', () => {
         })
     })
 
-
     async function fetchTickets() {
         isLoading.value = true
         error.value = null
