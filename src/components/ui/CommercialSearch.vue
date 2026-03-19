@@ -18,6 +18,7 @@ const wrapperRef = ref(null)
 
 let debounceTimer = null
 let justSelected = false
+let requestId = 0
 
 watch(query, (val) => {
     clearTimeout(debounceTimer)
@@ -34,18 +35,23 @@ watch(query, (val) => {
 })
 
 async function fetchResults(q) {
+    const id = ++requestId
     isLoading.value = true
     try {
-        results.value = await adminApi.get(`/commercials/search?q=${encodeURIComponent(q)}`)
-        isOpen.value = results.value.length > 0
+        const data = await adminApi.get(`/commercials/search?q=${encodeURIComponent(q)}`)
+        if (id !== requestId) return
+        results.value = data
+        isOpen.value = true
     } catch {
-        results.value = []
+        if (id === requestId) results.value = []
     } finally {
-        isLoading.value = false
+        if (id === requestId) isLoading.value = false
     }
 }
 
 function select(item) {
+    clearTimeout(debounceTimer)
+    requestId++
     justSelected = true
     selectedLabel.value = item.name
     query.value = item.name
@@ -93,6 +99,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             >
                 {{ item.name }}
             </li>
+            <li v-if="!results.length" class="search-result-empty">No commercials found</li>
         </ul>
     </div>
 </template>
@@ -178,6 +185,14 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
 .search-result-item.selected {
     background-color: var(--border);
+}
+
+.search-result-empty {
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-align: center;
 }
 
 @keyframes spin {
