@@ -293,7 +293,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleOutsideClick))
 }
 
 /* ---- Responsive ---- */
-@media (max-width: 768px) {
+@media (width <= 768px) {
 
     .navbar {
         padding: 0 14px;
@@ -321,6 +321,17 @@ onBeforeUnmount(() => document.removeEventListener('click', handleOutsideClick))
 
     .commercial-main {
         padding: 16px;
+    }
+}
+@media (width <= 480px) {
+    .navbar {
+        border: none;
+        border-bottom: 2px solid var(--border);
+        border-radius: 0;
+    }
+
+    .nav-logo img[data-v-2d164387] {
+        margin-bottom: -4px;
     }
 }
 </style>

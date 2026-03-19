@@ -11,3 +11,9 @@ body {
   color: var(--text-muted);
   min-height: 100vh;
 }
+
+@media (max-width: 480px) {
+  #app {
+    padding: 0;
+  }
+}
