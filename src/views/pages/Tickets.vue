@@ -7,7 +7,7 @@ import StatusFilter from '@/components/ui/StatusFilter.vue';
 import CategoryFilter from '@/components/ui/CategoryFilter.vue';
 
 const store = useTicketsStore()
-const { isLoading, error, tickets, sortedTickets, sortBy, sortDir, fetched, filterStatus, filterCategory, filterDateFrom, filterDateTo } = storeToRefs(store)
+const { isLoading, isLoadingMore, error, tickets, sortedTickets, sortBy, sortDir, fetched, hasMore, total, filterStatus, filterCategory, filterDateFrom, filterDateTo } = storeToRefs(store)
 const { fetchTickets, toggleSort, clearFilters } = store
 
 const hasActiveFilters = computed(() => filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value)
@@ -34,7 +34,7 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
         <div class="page-header">
             <h1>Tickets</h1>
             <span class="ticket-count" v-if="!isLoading">
-                {{ sortedTickets.length }}<template v-if="hasActiveFilters"> / {{ tickets.length }}</template> total
+                {{ tickets.length }}<template v-if="hasActiveFilters"> / {{ total }}</template> total
             </span>
         </div>
 
@@ -78,10 +78,13 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
             v-else
             :tickets="sortedTickets"
             :loading="isLoading"
+            :loading-more="isLoadingMore"
+            :has-more="hasMore"
             :sort-by="sortBy"
             :sort-dir="sortDir"
             @status-change="onStatusChange"
             @sort="toggleSort"
+            @load-more="fetchTickets(true)"
         />
     </div>
 </template>

@@ -20,7 +20,7 @@ async function request(url, options = {}) {
     headers['Content-Type'] = 'application/json'
   }
 
-  const response = await fetch(url, { ...options, headers })
+  const response = await fetch(url, { ...options, headers, signal: options.signal })
 
   if (!response.ok) {
     await new Promise(res => setTimeout(res, 1200))

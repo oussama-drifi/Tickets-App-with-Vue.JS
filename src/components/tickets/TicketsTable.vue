@@ -6,7 +6,9 @@ import ImageModal from '@/components/ui/ImageModal.vue';
 const props = defineProps({
     tickets: { type: Array, required: true },
     loading: { type: Boolean, default: false },
-    skeletonRows: { type: Number, default: 6 },
+    loadingMore: { type: Boolean, default: false },
+    hasMore: { type: Boolean, default: false },
+    skeletonRows: { type: Number, default: 5 },
     sortBy: { type: String, default: null },
     sortDir: { type: String, default: 'asc'},
     api: { type: Object, default: () => adminApi },
@@ -19,7 +21,7 @@ const categoryIcon = {
 }
 const statuses = ['pending', 'verified', 'paid', 'rejected']
 
-const emit = defineEmits(['status-change', 'sort'])
+const emit = defineEmits(['status-change', 'sort', 'load-more'])
 
 function sortIcon(field) {
     if (props.sortBy !== field) return 'bi-arrow-down-up'
@@ -241,8 +243,24 @@ onUnmounted(() => {
                         </span>
                     </td>
                 </tr>
+                <!-- Loading more skeleton rows -->
+                <tr v-if="loadingMore" v-for="i in skeletonRows" :key="'more-' + i" class="skeleton-row">
+                    <td><div class="skeleton skeleton-icon"></div></td>
+                    <td><div class="skeleton skeleton-text"></div></td>
+                    <td><div class="skeleton skeleton-short"></div></td>
+                    <td><div class="skeleton skeleton-medium"></div></td>
+                    <td><div class="skeleton skeleton-text"></div></td>
+                    <td><div class="skeleton skeleton-short"></div></td>
+                    <td><div class="skeleton skeleton-badge"></div></td>
+                </tr>
             </tbody>
         </table>
+        <!-- Show More button -->
+        <div v-if="hasMore && !loadingMore" class="show-more-wrapper">
+            <button class="show-more-btn" @click="emit('load-more')">
+                <i class="bi bi-arrow-down-circle"></i> Show More
+            </button>
+        </div>
     </div>
 
     <!-- Fixed-position dropdown (outside scroll container) -->
@@ -564,6 +582,34 @@ onUnmounted(() => {
 
 .skeleton-row td {
     border-top: 1px solid var(--border);
+}
+
+/* ---- Show More ---- */
+.show-more-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+}
+
+.show-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 24px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+}
+
+.show-more-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
 }
 
 /* ---- Responsive ---- */

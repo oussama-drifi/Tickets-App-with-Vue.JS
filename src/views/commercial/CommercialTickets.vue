@@ -7,8 +7,13 @@ import ImageModal from '@/components/ui/ImageModal.vue'
 import StatusFilter from '@/components/ui/StatusFilter.vue'
 import CategoryFilter from '@/components/ui/CategoryFilter.vue'
 
+const PAGE_SIZE = 5
 const tickets = ref([])
 const loading = ref(false)
+const loadingMore = ref(false)
+const currentPage = ref(1)
+const totalPages = ref(1)
+const hasMore = computed(() => currentPage.value < totalPages.value)
 
 // Filters
 const filterStatus = ref('')
@@ -25,22 +30,50 @@ function clearFilters() {
     filterDateTo.value = ''
 }
 
+// Abort controller
+let abortController = null
+
 // get tickets
-async function fetchTickets() {
-    loading.value = true
+async function fetchTickets(loadMore = false) {
+    if (abortController) {
+        abortController.abort()
+        abortController = null
+    }
+    abortController = new AbortController()
+    const { signal } = abortController
+
+    const page = loadMore ? currentPage.value + 1 : 1
+
+    if (loadMore) {
+        loadingMore.value = true
+    } else {
+        loading.value = true
+    }
+
     const params = new URLSearchParams()
     if (filterStatus.value) params.set('status', filterStatus.value)
     if (filterCategory.value) params.set('category', filterCategory.value)
     if (filterDateFrom.value) params.set('dateFrom', filterDateFrom.value)
     if (filterDateTo.value) params.set('dateTo', filterDateTo.value)
+    params.set('page', page)
+    params.set('limit', PAGE_SIZE)
     const qs = params.toString()
     try {
-        const data = await commercialApi.get(`/tickets${qs ? `?${qs}` : ''}`)
-        tickets.value = data
-    } catch {
-        tickets.value = []
+        const data = await commercialApi.get(`/tickets?${qs}`, { signal })
+        if (loadMore) {
+            tickets.value = [...tickets.value, ...data.tickets]
+        } else {
+            tickets.value = data.tickets
+        }
+        currentPage.value = data.page
+        totalPages.value = data.totalPages
+    } catch (err) {
+        if (err.name === 'AbortError') return
+        if (!loadMore) tickets.value = []
     } finally {
         loading.value = false
+        loadingMore.value = false
+        abortController = null
     }
 }
 
@@ -108,9 +141,9 @@ onMounted(() => fetchTickets())
             </button>
         </div>
 
-        <!-- Loading skeleton -->
+        <!-- Loading skeleton (initial load) -->
         <div v-if="loading" class="cards-grid">
-            <div v-for="i in 6" :key="i" class="skeleton-card">
+            <div v-for="i in PAGE_SIZE" :key="i" class="skeleton-card">
                 <div class="skeleton-header">
                     <div class="skeleton skeleton-icon"></div>
                     <div class="skeleton-header-text">
@@ -138,10 +171,38 @@ onMounted(() => fetchTickets())
                 :ticket="ticket"
                 @image-click="openImageModal(ticket)"
             />
+            <!-- Loading more skeletons -->
+            <template v-if="loadingMore">
+                <div v-for="i in PAGE_SIZE" :key="'more-' + i" class="skeleton-card">
+                    <div class="skeleton-header">
+                        <div class="skeleton skeleton-icon"></div>
+                        <div class="skeleton-header-text">
+                            <div class="skeleton skeleton-line wide"></div>
+                            <div class="skeleton skeleton-line medium"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton skeleton-line wide"></div>
+                    <div class="skeleton skeleton-line short"></div>
+                    <div class="skeleton-footer">
+                        <div class="skeleton skeleton-line short"></div>
+                        <div class="skeleton-badges">
+                            <div class="skeleton skeleton-badge"></div>
+                            <div class="skeleton skeleton-badge"></div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Show More button -->
+        <div v-if="!loading && hasMore && !loadingMore" class="show-more-wrapper">
+            <button class="show-more-btn" @click="fetchTickets(true)">
+                <i class="bi bi-arrow-down-circle"></i> Show More
+            </button>
         </div>
 
         <!-- Empty state -->
-        <div v-else class="empty-state">
+        <div v-else-if="!loading && !tickets.length" class="empty-state">
             <i class="bi bi-ticket-perforated"></i>
             <p>No tickets yet.</p>
         </div>
@@ -330,6 +391,34 @@ onMounted(() => fetchTickets())
 @keyframes shimmer {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
+}
+
+/* ---- Show More ---- */
+.show-more-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+.show-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 24px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+}
+
+.show-more-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
 }
 
 /* ---- Empty State ---- */

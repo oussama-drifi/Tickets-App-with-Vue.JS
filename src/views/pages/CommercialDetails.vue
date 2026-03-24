@@ -13,7 +13,7 @@ const route = useRoute()
 const commercialsStore = useCommercialsStore()
 const ticketsStore = useTicketsStore()
 
-const { isLoading, sortBy, sortDir, sortedCommercialTickets, filterStatus, filterCategory, filterDateFrom, filterDateTo } = storeToRefs(ticketsStore)
+const { isLoading, isLoadingMore, sortBy, sortDir, sortedCommercialTickets, commercialHasMore, filterStatus, filterCategory, filterDateFrom, filterDateTo } = storeToRefs(ticketsStore)
 const { commercials } = storeToRefs(commercialsStore)
 
 const editModalOpen = ref(false)
@@ -113,10 +113,13 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
                 v-if="sortedCommercialTickets.length || isLoading"
                 :tickets="sortedCommercialTickets"
                 :loading="isLoading"
+                :loading-more="isLoadingMore"
+                :has-more="commercialHasMore"
                 :sort-by="sortBy"
                 :sort-dir="sortDir"
                 @status-change="onStatusChange"
                 @sort="ticketsStore.toggleSort"
+                @load-more="ticketsStore.loadCommercialTickets(selectedId, true)"
             />
             <p v-else class="no-tickets">
                 <i class="bi bi-ticket"></i>
