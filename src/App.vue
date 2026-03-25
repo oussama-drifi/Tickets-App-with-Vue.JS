@@ -1,7 +1,3 @@
-<template>
-  <RouterView />
-</template>
-
 <script setup>
 import { onMounted } from 'vue';
 import { RouterView } from 'vue-router'
@@ -11,3 +7,7 @@ onMounted(() => {
   document.documentElement.setAttribute('data-theme', theme);
 })
 </script>
+
+<template>
+  <RouterView />
+</template>

@@ -2,30 +2,24 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
-    options: {
-        type: Array,
-        required: true,
-    },
-    modelValue: {
-        type: [String, Number, null],
-        default: null,
-    },
-    placeholder: {
-        type: String,
-        default: '-- Select --',
-    },
+    options: { type: Array, required: true },
+    modelValue: { type: [String, Number, null], default: null },
+    placeholder: { type: String, default: '-- Select --' }
 })
-
-const emit = defineEmits(['update:modelValue'])
-
+// state
 const isOpen = ref(false)
 const selectRef = ref(null)
 
+// emits
+const emit = defineEmits(['update:modelValue'])
+
+// getters
 const selectedLabel = computed(() => {
     const found = props.options.find(o => o.value === props.modelValue)
     return found ? found.label : props.placeholder
 })
 
+// actions
 function toggleDropdown() {
     isOpen.value = !isOpen.value
 }

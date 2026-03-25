@@ -10,6 +10,7 @@ const email = ref('')
 const password = ref('')
 const error = ref(null)
 const loading = ref(false)
+const showPassword = ref(false)
 
 function loginWithGoogle() {
     // TODO: implement Google OAuth
@@ -89,12 +90,17 @@ async function handleLogin() {
                     <input
                         id="password"
                         v-model="password"
-                        type="password"
+                        :type="showPassword ? 'text' : 'password'"
                         placeholder=" "
                         required
                         autocomplete="current-password"
                     />
                     <label for="password"><i class="bi bi-key"></i> Password</label>
+                    <i
+                        class="bi toggle-password"
+                        :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"
+                        @click="showPassword = !showPassword"
+                    ></i>
                 </div>
 
                 <div v-if="error" class="error-msg">{{ error }}</div>
@@ -224,9 +230,23 @@ async function handleLogin() {
     padding: 0;
 }
 
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--text-muted, #888);
+    font-size: 16px;
+}
+
+.toggle-password:hover {
+    color: var(--text, #1a1a1a);
+}
+
 .field input {
     width: 100%;
-    padding: 20px 12px 8px;
+    padding: 20px 36px 8px 12px;
     border: 1px solid var(--border, #e0e0e0);
     border-radius: 8px;
     font-size: 14px;

@@ -2,14 +2,32 @@
 import { useTicketsStore } from '@/stores/tickets';
 import { storeToRefs } from 'pinia';
 import { onMounted, onUnmounted, computed, watch } from 'vue';
+import { useSorting } from '@/composables/useSorting';
 import TicketsTable from '@/components/tickets/TicketsTable.vue';
 import StatusFilter from '@/components/ui/StatusFilter.vue';
 import CategoryFilter from '@/components/ui/CategoryFilter.vue';
 
 const store = useTicketsStore()
-const { isLoading, isLoadingMore, error, tickets, sortedTickets, sortBy, sortDir, fetched, hasMore, total, filterStatus, filterCategory, filterDateFrom, filterDateTo } = storeToRefs(store)
-const { fetchTickets, toggleSort, clearFilters } = store
 
+const { isLoading,
+        isLoadingMore,
+        error, 
+        tickets,
+        filteredTickets,
+        fetched,
+        fetchedAll,
+        hasMore,
+        total,
+        filterStatus,
+        filterCategory,
+        filterDateFrom,
+        filterDateTo
+        } = storeToRefs(store);
+
+const { fetchTickets, clearFilters } = store
+const { sortBy, sortDir, toggleSort, sortedItems: sortedTickets } = useSorting(filteredTickets)
+
+// control clear button appearance
 const hasActiveFilters = computed(() => filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value)
 
 function onStatusChange(ticket, status) {
@@ -17,15 +35,14 @@ function onStatusChange(ticket, status) {
 }
 
 onMounted(() => {
-    if (!fetched.value) fetchTickets()
+    if (!fetchedAll.value && !fetched.value) fetchTickets();
 })
 
-onUnmounted(() => {
-    clearFilters()
-})
+// in case we navigate to a single commercial's tickets page
+onUnmounted(() => clearFilters())
 
 watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
-    fetchTickets()
+    if (!fetchedAll.value) fetchTickets()
 })
 </script>
 

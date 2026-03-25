@@ -19,9 +19,13 @@ const emit = defineEmits(['close'])
                         <i class="bi bi-x-lg"></i>
                     </button>
                     <h3 class="modal-title">{{ title }}</h3>
-                    <div v-if="loading" class="modal-loading">
-                        <div class="spinner"></div>
-                    </div>
+                    <template v-if="loading">
+                        <div class="modal-image-wrapper">
+                            <div class="image-skeleton"></div>
+                        </div>
+                        <div class="text-skeleton" style="width: 100%; height: 14px;"></div>
+                        <div class="text-skeleton" style="width: 75%; height: 14px;"></div>
+                    </template>
 
                     <template v-else>
                         <div class="modal-image-wrapper">
@@ -109,23 +113,25 @@ const emit = defineEmits(['close'])
     padding-right: 30px;
 }
 
-.modal-loading {
-    display: flex;
-    justify-content: center;
-    padding: 40px 0;
+.image-skeleton {
+    width: 100%;
+    height:180px;
+    background: linear-gradient(90deg, var(--bg) 25%, var(--border) 50%, var(--bg) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
 }
 
-.spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
+.text-skeleton {
+    border-radius: 6px;
+    margin-bottom: 10px;
+    background: linear-gradient(90deg, var(--bg) 25%, var(--border) 50%, var(--bg) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 .modal-image-wrapper {

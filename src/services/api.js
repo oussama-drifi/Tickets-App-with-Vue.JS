@@ -23,12 +23,12 @@ async function request(url, options = {}) {
   const response = await fetch(url, { ...options, headers, signal: options.signal })
 
   if (!response.ok) {
-    await new Promise(res => setTimeout(res, 1200))
+    await new Promise(res => setTimeout(res, 1200)) // simulate delay
     const body = await response.json().catch(() => null)
     throw new Error(body?.error || `API error: ${response.status}`)
   }
 
-  await new Promise(res => setTimeout(res, 1200))
+  await new Promise(res => setTimeout(res, 1200))// simulate delay
   return response.json()
 }
 

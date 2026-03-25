@@ -3,12 +3,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 defineProps({
     modelValue: { type: String, default: '' },
-})
-
-const emit = defineEmits(['update:modelValue'])
-
-const isOpen = ref(false)
-const wrapperRef = ref(null)
+});
 
 const statuses = [
     { value: '', label: 'All statuses' },
@@ -17,6 +12,11 @@ const statuses = [
     { value: 'paid', label: 'Paid' },
     { value: 'rejected', label: 'Rejected' },
 ]
+// sync the selected value with parent filters
+const emit = defineEmits(['update:modelValue'])
+
+const isOpen = ref(false)
+const wrapperRef = ref(null)
 
 function select(value) {
     emit('update:modelValue', value)
@@ -28,8 +28,9 @@ function handleClickOutside(e) {
         isOpen.value = false
     }
 }
-
+// make the document handle the outside click
 onMounted(() => document.addEventListener('click', handleClickOutside))
+// cleanup outsideClick event handler
 onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 </script>
 
@@ -37,6 +38,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
     <div class="status-filter" ref="wrapperRef">
         <button class="trigger" :class="modelValue || 'all'" @click="isOpen = !isOpen">
             <span v-if="modelValue" class="status-dot" :class="modelValue"></span>
+            <span v-else><i class="bi bi-activity"></i></span>
             <span class="label">{{ statuses.find(s => s.value === modelValue)?.label }}</span>
             <i class="bi bi-chevron-down chevron" :class="{ rotated: isOpen }"></i>
         </button>

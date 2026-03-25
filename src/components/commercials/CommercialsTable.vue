@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCommercialsStore } from '@/stores/commercials'
 import { storeToRefs } from 'pinia'
@@ -8,11 +8,10 @@ import CustomSelect from '@/components/ui/CustomSelect.vue'
 const commercialsStore = useCommercialsStore()
 const router = useRouter()
 
-const { fetchCommercials, filteredCommercials } = commercialsStore
-const {isLoading, fetched} = storeToRefs(commercialsStore)
+const { fetchCommercials, fetchMore, hasMore, abortPending } = commercialsStore
+const { commercials, isLoading, isLoadingMore } = storeToRefs(commercialsStore)
 
-
-const searchQuery = ref('');
+const searchQuery = ref('')
 const statusFilter = ref('all')
 
 const statusOptions = [
@@ -21,10 +20,26 @@ const statusOptions = [
     { value: 'suspended', label: 'Suspended' },
 ]
 
+let debounceTimer = null
+
+function loadMore() {
+    fetchMore(searchQuery.value, statusFilter.value)
+}
+
+watch([searchQuery, statusFilter], () => {
+    clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => {
+        fetchCommercials(searchQuery.value, statusFilter.value)
+    }, 300)
+})
+
 onMounted(() => {
-    if (!fetched.value) {
-        fetchCommercials()
-    }
+    fetchCommercials(searchQuery.value, statusFilter.value)
+})
+
+onUnmounted(() => {
+    clearTimeout(debounceTimer)
+    abortPending()
 })
 
 </script>
@@ -84,7 +99,7 @@ onMounted(() => {
             </thead>
             <tbody>
                 <tr
-                    v-for="commercial in filteredCommercials(searchQuery, statusFilter)"
+                    v-for="commercial in commercials"
                     :key="commercial.id"
                     class="clickable-row"
                     @click="router.push({ name: 'commercial-details', params: { id: commercial.id } })"
@@ -120,9 +135,25 @@ onMounted(() => {
                         <span class="ticket-count"><i class="bi bi-ticket"></i> {{ commercial.ticketsCount ?? 0 }}</span>
                     </td>
                 </tr>
+                <!-- Loading more skeletons -->
+                <tr v-if="isLoadingMore" v-for="i in 5" :key="'skeleton-' + i" class="skeleton-row">
+                    <td>
+                        <div class="name-cell">
+                            <div class="skeleton skeleton-avatar"></div>
+                            <div class="skeleton skeleton-text"></div>
+                        </div>
+                    </td>
+                    <td><div class="skeleton skeleton-email"></div></td>
+                    <td><div class="skeleton skeleton-badge"></div></td>
+                    <td><div class="skeleton skeleton-short"></div></td>
+                </tr>
             </tbody>
         </table>
         </div>
+        <!-- Show more button -->
+        <button v-if="hasMore() && !isLoadingMore" class="show-more-btn" @click="loadMore">
+            Show more
+        </button>
     </div>
 </template>
 
@@ -308,6 +339,27 @@ onMounted(() => {
 
 .skeleton-row td {
     border-top: 1px solid var(--border);
+}
+
+/* Show more */
+.show-more-btn {
+    display: block;
+    margin: 18px auto 0;
+    padding: 10px 32px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.show-more-btn:hover {
+    border-color: var(--primary);
+    background: var(--bg);
 }
 
 /* Responsive */

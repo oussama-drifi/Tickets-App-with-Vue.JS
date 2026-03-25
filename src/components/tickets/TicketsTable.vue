@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, ref } from 'vue';
 import { adminApi } from '@/services/api';
 import ImageModal from '@/components/ui/ImageModal.vue';
+import { formatDate } from '@/utils';
 
 const props = defineProps({
     tickets: { type: Array, required: true },
@@ -14,6 +15,7 @@ const props = defineProps({
     api: { type: Object, default: () => adminApi },
     readonly: { type: Boolean, default: false }
 })
+
 const categoryIcon = {
     restaurant: 'bi bi-cup-hot',
     hotel: 'bi bi-building',
@@ -21,24 +23,22 @@ const categoryIcon = {
 }
 const statuses = ['pending', 'verified', 'paid', 'rejected']
 
-const emit = defineEmits(['status-change', 'sort', 'load-more'])
+const emit = defineEmits(['status-change', 'sort', 'load-more']);
 
 function sortIcon(field) {
     if (props.sortBy !== field) return 'bi-arrow-down-up'
     return props.sortDir === 'asc' ? 'bi-sort-up' : 'bi-sort-down'
 }
-function formatDate(dateStr) {
-    return new Date(dateStr).toLocaleDateString('us-US', {
-        weekday: 'short',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    })
-}
 
 const openDropdown = ref(null)
 const dropdownPos = ref({ top: 0, left: 0 })
 const tableWrapper = ref(null)
+
+function closeDropdowns(e) {
+    if (!e.target.closest('.status-select') && !e.target.closest('.status-dropdown')) {
+        openDropdown.value = null
+    }
+}
 
 function onScroll() {
     openDropdown.value = null
@@ -144,12 +144,6 @@ async function openImageModal(ticket) {
 
 function closeModal() {
     modalOpen.value = false
-}
-
-function closeDropdowns(e) {
-    if (!e.target.closest('.status-select') && !e.target.closest('.status-dropdown')) {
-        openDropdown.value = null
-    }
 }
 
 onMounted(() => {

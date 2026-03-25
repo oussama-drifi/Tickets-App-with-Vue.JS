@@ -5,17 +5,18 @@ defineProps({
     modelValue: { type: String, default: '' },
 })
 
-const emit = defineEmits(['update:modelValue'])
-
-const isOpen = ref(false)
-const wrapperRef = ref(null)
-
 const categories = [
     { value: '', label: 'All categories', icon: 'bi bi-grid' },
     { value: 'restaurant', label: 'Restaurant', icon: 'bi bi-cup-hot' },
     { value: 'hotel', label: 'Hotel', icon: 'bi bi-building' },
     { value: 'work', label: 'Work', icon: 'bi bi-briefcase' },
 ]
+
+// sync the selected value with parent filters
+const emit = defineEmits(['update:modelValue'])
+
+const isOpen = ref(false)
+const wrapperRef = ref(null)
 
 function select(value) {
     emit('update:modelValue', value)
@@ -28,7 +29,9 @@ function handleClickOutside(e) {
     }
 }
 
+// make the document handle the outside click
 onMounted(() => document.addEventListener('click', handleClickOutside))
+// cleanup outsideClick event handler
 onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 </script>
 

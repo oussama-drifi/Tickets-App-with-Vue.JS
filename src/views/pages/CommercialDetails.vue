@@ -8,12 +8,14 @@ import TicketsTable from '@/components/tickets/TicketsTable.vue'
 import StatusFilter from '@/components/ui/StatusFilter.vue'
 import CategoryFilter from '@/components/ui/CategoryFilter.vue'
 import EditCommercialModal from '@/components/commercials/EditCommercialModal.vue'
+import { useSorting } from '@/composables/useSorting'
 
 const route = useRoute()
 const commercialsStore = useCommercialsStore()
 const ticketsStore = useTicketsStore()
 
-const { isLoading, isLoadingMore, sortBy, sortDir, sortedCommercialTickets, commercialHasMore, filterStatus, filterCategory, filterDateFrom, filterDateTo } = storeToRefs(ticketsStore)
+const { isLoading, isLoadingMore, selectedCommercialTickets, commercialHasMore, filterStatus, filterCategory, filterDateFrom, filterDateTo } = storeToRefs(ticketsStore)
+const { sortBy, sortDir, toggleSort, sortedItems: sortedCommercialTickets } = useSorting(selectedCommercialTickets)
 const { commercials } = storeToRefs(commercialsStore)
 
 const editModalOpen = ref(false)
@@ -118,7 +120,7 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
                 :sort-by="sortBy"
                 :sort-dir="sortDir"
                 @status-change="onStatusChange"
-                @sort="ticketsStore.toggleSort"
+                @sort="toggleSort"
                 @load-more="ticketsStore.loadCommercialTickets(selectedId, true)"
             />
             <p v-else class="no-tickets">
