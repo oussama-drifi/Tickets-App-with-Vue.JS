@@ -66,16 +66,15 @@ export const useTicketsStore = defineStore('tickets', () => {
 
         try {
             const data = await adminApi.get(`/tickets${buildQuery(page)}`, { signal })
-            if (loadMore) {
-                tickets.value = [...tickets.value, ...data.tickets]
-            } else {
-                tickets.value = data.tickets
-            }
+
+            tickets.value = loadMore ? [...tickets.value, ...data.tickets] : data.tickets
+            
             currentPage.value = data.page
             totalPages.value = data.totalPages
             total.value = data.total
             fetched.value = true
-            if (!filterStatus.value && !filterCategory.value && !filterDateFrom.value && !filterDateTo.value
+            if (!filterStatus.value && !filterCategory.value && 
+                !filterDateFrom.value && !filterDateTo.value
                 && currentPage.value === totalPages.value) {
                 fetchedAll.value = true
             }
@@ -83,13 +82,17 @@ export const useTicketsStore = defineStore('tickets', () => {
             if (err.name === 'AbortError') return
             if (!loadMore) error.value = err.message
         } finally {
-            isLoading.value = false
-            isLoadingMore.value = false
-            abortController = null
+            if (signal === abortController?.signal) {
+                isLoading.value = false
+                isLoadingMore.value = false
+                abortController = null
+            }
         }
     }
 
     const selectedCommercialTickets = ref([])
+    const commercialTicketsFetched = ref(false)
+    const commercialFetchedAll = ref(false)
     const filteredCommercialTickets = computed(() => selectedCommercialTickets.value.filter(filterTickets))
 
     // pagination of a commercial's tickets
@@ -132,9 +135,11 @@ export const useTicketsStore = defineStore('tickets', () => {
             commercialCurrentPage.value = data.page
             commercialTotalPages.value = data.totalPages
             commercialTotal.value = data.total
-            if (!filterStatus.value && !filterCategory.value && !filterDateFrom.value && !filterDateTo.value
-                && currentPage.value === totalPages.value) {
-                fetchedAll.value = true
+            commercialTicketsFetched.value = true
+            if (!filterStatus.value && !filterCategory.value && 
+                !filterDateFrom.value && !filterDateTo.value
+                && commercialCurrentPage.value === commercialTotalPages.value) {
+                commercialFetchedAll.value = true
             }
         } catch (err) {
             if (err.name === 'AbortError') return
@@ -143,9 +148,11 @@ export const useTicketsStore = defineStore('tickets', () => {
                 selectedCommercialTickets.value = []
             }
         } finally {
-            isLoading.value = false
-            isLoadingMore.value = false
-            commercialAbortController = null
+            if (signal === commercialAbortController?.signal) {
+                isLoading.value = false
+                isLoadingMore.value = false
+                commercialAbortController = null
+            }
         }
     }
 
@@ -154,8 +161,6 @@ export const useTicketsStore = defineStore('tickets', () => {
         filterCategory.value = ''
         filterDateFrom.value = ''
         filterDateTo.value = ''
-        // also reset fetchedAll
-        fetchedAll.value = false
     }
 
     function filterTickets(t) {
@@ -168,7 +173,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     }
 
     return {
-        tickets, filteredTickets, isLoading, isLoadingMore, error, fetched, fetchedAll,
+        tickets, filteredTickets, isLoading, isLoadingMore, error, fetched, fetchedAll, commercialTicketsFetched,commercialFetchedAll,
         filterStatus, filterCategory, filterDateFrom, filterDateTo,
         currentPage, totalPages, total, hasMore,
         selectedCommercialTickets, filteredCommercialTickets,

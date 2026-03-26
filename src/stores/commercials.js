@@ -1,15 +1,38 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { adminApi } from '@/services/api'
+
+const PAGE_SIZE = 5;
 
 export const useCommercialsStore = defineStore('commercials', () => {
   const commercials = ref([])
+
   const isLoading = ref(false)
   const isLoadingMore = ref(false)
   const error = ref(null)
-  const page = ref(1)
+
+  const currentPage = ref(1)
   const totalPages = ref(1)
   const total = ref(0)
+
+  const fetched = ref(false)
+  const fetchedAll = ref(false)
+
+  const filterStatus = ref('all')
+  const filterSearch = ref('')
+
+  const selectedCommercial = ref(null)
+  const isSelectedCommercialLoading = ref(false)
+  const selectedCommercialNotFoundError = ref(null)
+
+  const filteredCommercials = computed(() => {
+    return commercials.value.filter((c) => {
+      if (!fetchedAll.value) return true
+      if (!c.name.toLowerCase().startsWith(filterSearch.value.toLowerCase())) return false
+      if (!c.status.toLowerCase().startsWith(filterStatus.value.toLowerCase())) return false
+      return true
+    })
+  })
 
   let abortController = null
 
@@ -20,76 +43,89 @@ export const useCommercialsStore = defineStore('commercials', () => {
     }
   }
 
-  function buildQuery(search, status, p) {
+  function buildQuery(p = 1) {
     const params = new URLSearchParams()
     params.set('page', p)
-    params.set('limit', '5')
-    if (search) params.set('search', search)
-    if (status && status !== 'all') params.set('status', status)
+    params.set('limit', PAGE_SIZE)
+    if (filterSearch.value) params.set('search', filterSearch.value)
+    if (filterStatus.value && filterStatus.value !== 'all') params.set('status', filterStatus.value)
     return `?${params.toString()}`
   }
 
-  async function fetchCommercials(search = '', status = 'all') {
+  async function fetchCommercials(fetchMore = false) {
     abortPending()
     abortController = new AbortController()
+    const { signal } = abortController
 
-    commercials.value = []
-    page.value = 1
-    isLoading.value = true
-    error.value = null
+    const page = fetchMore ? currentPage.value + 1 : 1
+
+    if (fetchMore) {
+      isLoadingMore.value = true
+    } else {
+      isLoading.value = true
+      error.value = null
+    }
 
     try {
       const data = await adminApi.get(
-        `/commercials${buildQuery(search, status, 1)}`,
-        { signal: abortController.signal }
+        `/commercials${buildQuery(page)}`,
+        { signal }
       )
-      commercials.value = data.commercials
-      page.value = data.page
+      commercials.value = fetchMore ? [...commercials.value, ...data.commercials] : data.commercials
+  
+      currentPage.value = data.page
       totalPages.value = data.totalPages
       total.value = data.total
+
+      // set fetched flag
+      fetched.value = true
+
+      // set fetchedAll flag in case of no-filtered results and all data loaded
+      if (!filterStatus.value && !filterSearch.value
+          && currentPage.value === totalPages.value) {
+          fetchedAll.value = true
+      }
+
     } catch (err) {
       if (err.name !== 'AbortError') {
         error.value = err.message
       }
     } finally {
       isLoading.value = false
-      abortController = null
-    }
-  }
-
-  async function fetchMore(search = '', status = 'all') {
-    if (page.value >= totalPages.value || isLoadingMore.value) return
-
-    abortPending()
-    abortController = new AbortController()
-
-    const nextPage = page.value + 1
-    isLoadingMore.value = true
-
-    try {
-      const data = await adminApi.get(
-        `/commercials${buildQuery(search, status, nextPage)}`,
-        { signal: abortController.signal }
-      )
-      commercials.value.push(...data.commercials)
-      page.value = data.page
-      totalPages.value = data.totalPages
-      total.value = data.total
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        error.value = err.message
-      }
-    } finally {
       isLoadingMore.value = false
       abortController = null
     }
   }
 
-  const hasMore = () => page.value < totalPages.value
+  const hasMore = computed(() => currentPage.value < totalPages.value)
+
+  async function fetchCommercial(commercialId) {
+
+    const commercial = commercials.value.find(c => c.id === commercialId) || null
+
+    if (commercial) {
+      selectedCommercial.value = commercial
+    }
+
+    else {
+      isSelectedCommercialLoading.value = true
+      selectedCommercialNotFoundError.value = null
+  
+      try {
+        selectedCommercial.value = await adminApi.get(`/commercials/${commercialId}`)
+      } catch(err) {
+        selectedCommercialNotFoundError.value = err.message
+      } finally {
+        isSelectedCommercialLoading.value = false
+      }
+    }
+
+  }
 
   return {
-    commercials, isLoading, isLoadingMore, error,
-    page, totalPages, total,
-    fetchCommercials, fetchMore, hasMore, abortPending
+    filteredCommercials, isLoading, isLoadingMore, error,
+    currentPage, totalPages, total, fetched, fetchedAll, filterStatus, filterSearch,
+    selectedCommercial, isSelectedCommercialLoading, selectedCommercialNotFoundError,
+    fetchCommercials, hasMore, abortPending, fetchCommercial
   }
 })

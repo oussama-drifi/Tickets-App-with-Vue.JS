@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch, onUnmounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCommercialsStore } from '@/stores/commercials'
 import { storeToRefs } from 'pinia'
@@ -8,38 +8,33 @@ import CustomSelect from '@/components/ui/CustomSelect.vue'
 const commercialsStore = useCommercialsStore()
 const router = useRouter()
 
-const { fetchCommercials, fetchMore, hasMore, abortPending } = commercialsStore
-const { commercials, isLoading, isLoadingMore } = storeToRefs(commercialsStore)
-
-const searchQuery = ref('')
-const statusFilter = ref('all')
+const { fetchCommercials } = commercialsStore
+const { filteredCommercials,
+        isLoading, 
+        isLoadingMore, 
+        hasMore,
+        fetched, 
+        fetchedAll,
+        filterSearch, 
+        filterStatus 
+    } = storeToRefs(commercialsStore)
 
 const statusOptions = [
-    { value: 'all', label: 'All' },
-    { value: 'active', label: 'Active' },
-    { value: 'suspended', label: 'Suspended' },
+    { value: 'all', label: 'all' },
+    { value: 'active', label: 'active' },
+    { value: 'suspended', label: 'suspended' },
 ]
 
+// debounced search
 let debounceTimer = null
-
-function loadMore() {
-    fetchMore(searchQuery.value, statusFilter.value)
-}
-
-watch([searchQuery, statusFilter], () => {
+watch([filterSearch, filterStatus], () => {
+    if (fetchedAll.value) return
     clearTimeout(debounceTimer)
-    debounceTimer = setTimeout(() => {
-        fetchCommercials(searchQuery.value, statusFilter.value)
-    }, 300)
+    debounceTimer = setTimeout(() => fetchCommercials(), 300)
 })
 
 onMounted(() => {
-    fetchCommercials(searchQuery.value, statusFilter.value)
-})
-
-onUnmounted(() => {
-    clearTimeout(debounceTimer)
-    abortPending()
+    if (!fetched.value) fetchCommercials()
 })
 
 </script>
@@ -79,79 +74,80 @@ onUnmounted(() => {
                 class="search-input"
                 type="text"
                 placeholder="Search for commercial"
-                v-model="searchQuery"
+                v-model="filterSearch"
             />
             <CustomSelect
-                v-model="statusFilter"
+                v-model="filterStatus"
                 :options="statusOptions"
                 placeholder="Filter by status"
             />
         </div>
+
         <div class="table-wrapper">
-        <table class="commercials-table">
-            <thead>
-                <tr>
-                    <th>Commercial</th>
-                    <th>Email</th>
-                    <th>Status</th>
-                    <th>Tickets</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr
-                    v-for="commercial in commercials"
-                    :key="commercial.id"
-                    class="clickable-row"
-                    @click="router.push({ name: 'commercial-details', params: { id: commercial.id } })"
-                >
-                    <td>
-                        <div class="name-cell">
-                            <img
-                                v-if="commercial.profileImagePath"
-                                :src="commercial.profileImagePath"
-                                alt="profile"
-                                class="profile-img"
-                                @error="$event.target.src = '/defaultProfile.png'"
-                            >
-                            <img
-                                v-else
-                                src="/defaultProfile.png"
-                                alt="profile"
-                                class="profile-img"
-                            >
-                            <span class="commercial-name">{{ commercial.name }}</span>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="commercial-email"><i class="bi bi-envelope"></i> {{ commercial.email }}</span>
-                    </td>
-                    <td>
-                        <span class="status-badge" :class="commercial.status">
-                            <i class="bi bi-activity"></i>
-                            {{ commercial.status }}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="ticket-count"><i class="bi bi-ticket"></i> {{ commercial.ticketsCount ?? 0 }}</span>
-                    </td>
-                </tr>
-                <!-- Loading more skeletons -->
-                <tr v-if="isLoadingMore" v-for="i in 5" :key="'skeleton-' + i" class="skeleton-row">
-                    <td>
-                        <div class="name-cell">
-                            <div class="skeleton skeleton-avatar"></div>
-                            <div class="skeleton skeleton-text"></div>
-                        </div>
-                    </td>
-                    <td><div class="skeleton skeleton-email"></div></td>
-                    <td><div class="skeleton skeleton-badge"></div></td>
-                    <td><div class="skeleton skeleton-short"></div></td>
-                </tr>
-            </tbody>
-        </table>
+            <table class="commercials-table">
+                <thead>
+                    <tr>
+                        <th>Commercial</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Tickets</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr
+                        v-for="commercial in filteredCommercials"
+                        :key="commercial.id"
+                        class="clickable-row"
+                        @click="router.push({ name: 'commercial-details', params: { id: commercial.id } })"
+                    >
+                        <td>
+                            <div class="name-cell">
+                                <img
+                                    v-if="commercial.profileImagePath"
+                                    :src="commercial.profileImagePath"
+                                    alt="profile"
+                                    class="profile-img"
+                                    @error="$event.target.src = '/defaultProfile.png'"
+                                >
+                                <img
+                                    v-else
+                                    src="/defaultProfile.png"
+                                    alt="profile"
+                                    class="profile-img"
+                                >
+                                <span class="commercial-name">{{ commercial.name }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="commercial-email"><i class="bi bi-envelope"></i> {{ commercial.email }}</span>
+                        </td>
+                        <td>
+                            <span class="status-badge" :class="commercial.status">
+                                <i class="bi bi-activity"></i>
+                                {{ commercial.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="ticket-count"><i class="bi bi-ticket"></i> {{ commercial.ticketsCount ?? 0 }}</span>
+                        </td>
+                    </tr>
+                    <!-- Loading more skeletons -->
+                    <tr v-if="isLoadingMore" v-for="i in 5" :key="'skeleton-' + i" class="skeleton-row">
+                        <td>
+                            <div class="name-cell">
+                                <div class="skeleton skeleton-avatar"></div>
+                                <div class="skeleton skeleton-text"></div>
+                            </div>
+                        </td>
+                        <td><div class="skeleton skeleton-email"></div></td>
+                        <td><div class="skeleton skeleton-badge"></div></td>
+                        <td><div class="skeleton skeleton-short"></div></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
         <!-- Show more button -->
-        <button v-if="hasMore() && !isLoadingMore" class="show-more-btn" @click="loadMore">
+        <button v-if="hasMore && !isLoadingMore" class="show-more-btn" @click="fetchCommercials(true)">
             Show more
         </button>
     </div>

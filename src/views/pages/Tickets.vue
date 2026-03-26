@@ -1,7 +1,7 @@
 <script setup>
 import { useTicketsStore } from '@/stores/tickets';
 import { storeToRefs } from 'pinia';
-import { onMounted, onUnmounted, computed, watch } from 'vue';
+import { onMounted, computed, watch, onUnmounted, onBeforeMount } from 'vue';
 import { useSorting } from '@/composables/useSorting';
 import TicketsTable from '@/components/tickets/TicketsTable.vue';
 import StatusFilter from '@/components/ui/StatusFilter.vue';
@@ -34,16 +34,29 @@ function onStatusChange(ticket, status) {
     ticket.status = status
 }
 
-onMounted(() => {
-    if (!fetchedAll.value && !fetched.value) fetchTickets();
-})
 
-// in case we navigate to a single commercial's tickets page
-onUnmounted(() => clearFilters())
+let skipNextWatch = false
+onMounted(() => {
+    skipNextWatch = true
+    clearFilters()
+    if (!fetched.value) fetchTickets()
+})
 
 watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
+    if (skipNextWatch) {
+        skipNextWatch = false
+        return
+    }
     if (!fetchedAll.value) fetchTickets()
 })
+
+// const hasMoreFilteredTickets = computed(() => {
+//     if (filteredTickets.value && (filterCategory.value || filterStatus.value || filterDateFrom.value || filterDateTo.value)) {
+//         return false
+//     }
+//     return true
+// })
+
 </script>
 
 <template>

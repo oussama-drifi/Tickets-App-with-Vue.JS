@@ -9,24 +9,19 @@ import { RouterView } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
-const commercialsStore = useCommercialsStore()
+const { fetchCommercials } = useCommercialsStore()
 
 const drawerOpen = ref(false)
 
 const isDetailsPage = computed(() => route.name === 'commercial-details')
-
-const selectedId = computed(() => {
-    return route.params.id ? Number(route.params.id) : null
-})
+const selectedId = computed(() => route.params.id ? Number(route.params.id) : null)
 
 function onSelectCommercial(id) {
-    if (id) {
-        router.replace({ name: 'commercial-details', params: { id } })
-    }
+    if (id) router.replace({ name: 'commercial-details', params: { id } })
 }
 
 function onCommercialCreated() {
-    commercialsStore.fetchCommercials()
+    fetchCommercials()
     drawerOpen.value = false
 }
 

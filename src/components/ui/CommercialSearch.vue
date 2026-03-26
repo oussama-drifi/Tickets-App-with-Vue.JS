@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
 import { adminApi } from '@/services/api'
 
 const props = defineProps({
@@ -17,68 +17,96 @@ const selectedLabel = ref('')
 const wrapperRef = ref(null)
 
 let debounceTimer = null
-let justSelected = false
-let requestId = 0
+let abortController = null
+let skipWatch = false
+
+// Sets query without triggering the watcher
+function setQuerySilent(val) {
+    skipWatch = true
+    query.value = val
+}
 
 watch(query, (val) => {
+    if (skipWatch) { skipWatch = false; return }
+
     clearTimeout(debounceTimer)
-    if (justSelected) {
-        justSelected = false
-        return
-    }
+
     if (!val.trim()) {
+        cancelFetch()
         results.value = []
         isOpen.value = false
         return
     }
-    debounceTimer = setTimeout(() => fetchResults(val.trim()), 250)
+
+    isLoading.value = true
+    isOpen.value = true
+    debounceTimer = setTimeout(() => fetchResults(val.trim()), 300)
 })
 
+function cancelFetch() {
+    clearTimeout(debounceTimer)
+    if (abortController) {
+        abortController.abort()
+        abortController = null
+    }
+    isLoading.value = false
+}
+
 async function fetchResults(q) {
-    const id = ++requestId
-    isLoading.value = true
+    if (abortController) abortController.abort()
+    abortController = new AbortController()
+    const { signal } = abortController
+
     try {
-        const data = await adminApi.get(`/commercials/search?q=${encodeURIComponent(q)}`)
-        if (id !== requestId) return
+        const data = await adminApi.get(`/commercials/search?q=${encodeURIComponent(q)}`, { signal })
         results.value = data
-        isOpen.value = true
-    } catch {
-        if (id === requestId) results.value = []
+    } catch (err) {
+        if (err.name === 'AbortError') return
+        results.value = []
     } finally {
-        if (id === requestId) isLoading.value = false
+        if (!signal.aborted) isLoading.value = false
     }
 }
 
 function select(item) {
-    clearTimeout(debounceTimer)
-    requestId++
-    justSelected = true
+    cancelFetch()
     selectedLabel.value = item.name
-    query.value = item.name
+    setQuerySilent(item.name)
     isOpen.value = false
     results.value = []
     emit('update:modelValue', item.id)
 }
 
+function clear() {
+    cancelFetch()
+    selectedLabel.value = ''
+    setQuerySilent('')
+    results.value = []
+    isOpen.value = false
+    emit('update:modelValue', null)
+}
+
 function onFocus() {
-    if (selectedLabel.value && query.value) {
+    if (selectedLabel.value) {
+        setQuerySilent('')
+        results.value = []
         isOpen.value = false
     }
 }
 
-function handleClickOutside(e) {
-    if (wrapperRef.value && !wrapperRef.value.contains(e.target)) {
-        isOpen.value = false
-        if (selectedLabel.value) query.value = selectedLabel.value
-    }
+function onFocusOut(e) {
+    if (wrapperRef.value?.contains(e.relatedTarget)) return
+    cancelFetch()
+    if (selectedLabel.value) setQuerySilent(selectedLabel.value)
+    results.value = []
+    isOpen.value = false
 }
 
-onMounted(() => document.addEventListener('click', handleClickOutside))
-onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
+onBeforeUnmount(cancelFetch)
 </script>
 
 <template>
-    <div class="commercial-search" ref="wrapperRef">
+    <div class="commercial-search" ref="wrapperRef" @focusout="onFocusOut">
         <div class="search-input-wrapper">
             <i class="bi bi-search search-icon"></i>
             <input
@@ -87,20 +115,34 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                 @focus="onFocus"
                 autocomplete="off"
             />
-            <i v-if="isLoading" class="bi bi-arrow-repeat spin loading-icon"></i>
+            <i
+                v-if="selectedLabel || query"
+                class="bi bi-x-lg"
+                @click="clear"
+            ></i>
         </div>
-        <ul v-if="isOpen" class="search-results">
-            <li
-                v-for="item in results"
-                :key="item.id"
-                class="search-result-item"
-                :class="{ selected: item.id === modelValue }"
-                @mousedown.prevent="select(item)"
-            >
-                {{ item.name }}
-            </li>
-            <li v-if="!results.length" class="search-result-empty">No commercials found</li>
-        </ul>
+
+        <Transition name="dropdown">
+            <ul v-if="isOpen" class="search-results">
+                <template v-if="isLoading">
+                    <li class="skeleton-item" v-for="n in 3" :key="n">
+                        <span class="skeleton-bone"></span>
+                    </li>
+                </template>
+                <template v-else>
+                    <li
+                        v-for="item in results"
+                        :key="item.id"
+                        class="search-result-item"
+                        :class="{ selected: item.id === modelValue }"
+                        @mousedown.prevent="select(item)"
+                    >
+                        {{ item.name }}
+                    </li>
+                    <li v-if="!results.length" class="search-result-empty">No commercials found</li>
+                </template>
+            </ul>
+        </Transition>
     </div>
 </template>
 
@@ -131,10 +173,16 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
     flex-shrink: 0;
 }
 
-.loading-icon {
-    font-size: 14px;
+.clear-icon {
+    font-size: 16px;
     color: var(--text-muted);
     flex-shrink: 0;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.clear-icon:hover {
+    color: var(--danger);
 }
 
 .search-input-wrapper input {
@@ -179,10 +227,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
     transition: background-color 0.15s;
 }
 
-.search-result-item:hover {
-    background-color: var(--border);
-}
-
+.search-result-item:hover,
 .search-result-item.selected {
     background-color: var(--border);
 }
@@ -195,10 +240,26 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
     text-align: center;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
+.skeleton-item {
+    padding: 8px 12px;
+    border-radius: 6px;
 }
-.spin {
-    animation: spin 0.8s linear infinite;
+
+.skeleton-bone {
+    display: block;
+    height: 14px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--border) 25%, color-mix(in srgb, var(--border) 60%, transparent) 50%, var(--border) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s infinite;
+    width: 70%;
+}
+
+.skeleton-item:nth-child(2) .skeleton-bone { width: 50%; }
+.skeleton-item:nth-child(3) .skeleton-bone { width: 60%; }
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useCommercialsStore } from '@/stores/commercials'
@@ -8,32 +8,38 @@ import TicketsTable from '@/components/tickets/TicketsTable.vue'
 import StatusFilter from '@/components/ui/StatusFilter.vue'
 import CategoryFilter from '@/components/ui/CategoryFilter.vue'
 import EditCommercialModal from '@/components/commercials/EditCommercialModal.vue'
+import CommercialDetailsSkeleton from '@/components/commercials/CommercialDetailsSkeleton.vue'
 import { useSorting } from '@/composables/useSorting'
 
 const route = useRoute()
 const commercialsStore = useCommercialsStore()
 const ticketsStore = useTicketsStore()
 
-const { isLoading, isLoadingMore, selectedCommercialTickets, commercialHasMore, filterStatus, filterCategory, filterDateFrom, filterDateTo } = storeToRefs(ticketsStore)
-const { sortBy, sortDir, toggleSort, sortedItems: sortedCommercialTickets } = useSorting(selectedCommercialTickets)
-const { commercials } = storeToRefs(commercialsStore)
+const {
+    isLoading,
+    isLoadingMore,
+    filteredCommercialTickets,
+    commercialFetchedAll,
+    commercialHasMore,
+    filterStatus,
+    filterCategory,
+    filterDateFrom,
+    filterDateTo
+    } = storeToRefs(ticketsStore)
+const { loadCommercialTickets, clearFilters } = ticketsStore;
+
+const { sortBy, sortDir, toggleSort, sortedItems: sortedCommercialTickets } = useSorting(filteredCommercialTickets)
+const { selectedCommercial, isSelectedCommercialLoading, selectedCommercialNotFoundError } = storeToRefs(commercialsStore)
+const { fetchCommercial } = commercialsStore
 
 const editModalOpen = ref(false)
 
 function onCommercialUpdated(updated) {
-    const idx = commercials.value.findIndex(c => c.id === updated.id)
-    if (idx !== -1) Object.assign(commercials.value[idx], updated)
+    Object.assign(selectedCommercial.value, updated)
     editModalOpen.value = false
 }
 
-const selectedId = computed(() => {
-    return route.params.id ? Number(route.params.id) : null
-})
-
-const commercial = computed(() => {
-    if (!selectedId.value) return null
-    return commercials.value.find(c => c.id === selectedId.value) || null
-})
+const selectedId = computed(() => route.params.id ? Number(route.params.id) : null)
 
 const hasActiveFilters = computed(() => filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value)
 
@@ -41,21 +47,16 @@ function onStatusChange(ticket, status) {
     ticket.status = status
 }
 
-onMounted(() => {
-    if (!commercials.value.length) commercialsStore.fetchCommercials()
-})
-
-onUnmounted(() => {
-    ticketsStore.clearFilters()
-})
+onMounted(() => clearFilters())
 
 watch(selectedId, (id) => {
     if (!id) return
-    ticketsStore.loadCommercialTickets(id)
+    fetchCommercial(id)
+    loadCommercialTickets(id)
 }, { immediate: true })
 
 watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
-    if (selectedId.value) ticketsStore.loadCommercialTickets(selectedId.value)
+    if (selectedId.value && !commercialFetchedAll.value) loadCommercialTickets(selectedId.value)
 })
 
 </script>
@@ -67,11 +68,19 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
         <p>Choose a commercial from the dropdown above to view their details & Tickets.</p>
     </div>
 
-    <div v-else-if="commercial" class="commercial-details">
+    <CommercialDetailsSkeleton v-else-if="isSelectedCommercialLoading" />
+
+    <div v-else-if="selectedCommercialNotFoundError" class="not-found">
+        <i class="bi bi-exclamation-circle"></i>
+        <h3>Not found</h3>
+        <p>This commercial doesn't exist or may have been removed.</p>
+    </div>
+
+    <div v-else-if="selectedCommercial" class="commercial-details">
         <div class="profile-section">
             <img
-                v-if="commercial.profileImagePath"
-                :src="commercial.profileImagePath"
+                v-if="selectedCommercial.profileImagePath"
+                :src="selectedCommercial.profileImagePath"
                 alt="profile"
                 class="profile-image"
                 @error="$event.target.src = '/defaultProfile.png'"
@@ -79,12 +88,12 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
             <img v-else src="/defaultProfile.png" alt="profile" class="profile-image" />
             <div class="profile-info">
                 <div class="name-row">
-                    <h2>{{ commercial.name }}</h2>
-                    <span class="status" :class="commercial.status"><i class="bi bi-activity"></i> {{ commercial.status }}</span>
+                    <h2>{{ selectedCommercial.name }}</h2>
+                    <span class="status" :class="selectedCommercial.status"><i class="bi bi-activity"></i> {{ selectedCommercial.status }}</span>
                     <button class="edit-btn" @click="editModalOpen = true"><i class="bi bi-pencil-square"></i> Edit</button>
                 </div>
-                <span class="email"><i class="bi bi-envelope"></i> <b>Email:</b> {{ commercial.email }}</span>        
-                <p><i class="bi bi-highlighter"></i> <b>Bio:</b> {{ commercial.bio || '_' }}</p>
+                <span class="email"><i class="bi bi-envelope"></i> <b>Email:</b> {{ selectedCommercial.email }}</span>
+                <p><i class="bi bi-highlighter"></i> <b>Bio:</b> {{ selectedCommercial.bio || '_' }}</p>
             </div>
         </div>
 
@@ -121,7 +130,7 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
                 :sort-dir="sortDir"
                 @status-change="onStatusChange"
                 @sort="toggleSort"
-                @load-more="ticketsStore.loadCommercialTickets(selectedId, true)"
+                @load-more="loadCommercialTickets(selectedId, true)"
             />
             <p v-else class="no-tickets">
                 <i class="bi bi-ticket"></i>
@@ -131,16 +140,10 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
 
         <EditCommercialModal
             :open="editModalOpen"
-            :commercial="commercial"
+            :commercial="selectedCommercial"
             @close="editModalOpen = false"
             @updated="onCommercialUpdated"
         />
-    </div>
-
-    <div v-else class="not-found">
-        <i class="bi bi-exclamation-circle"></i>
-        <h3>Not found</h3>
-        <p>This commercial doesn't exist or may have been removed.</p>
     </div>
 </template>
 
