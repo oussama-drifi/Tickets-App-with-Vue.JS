@@ -71,7 +71,12 @@ async function handleSubmit() {
 
 <template>
     <div class="new-ticket">
-        <h2 class="page-title"><i class="bi bi-plus-lg"></i> new Ticket</h2>
+        <div class="page-header">
+            <h2>New Ticket</h2>
+            <RouterLink :to="{ name: 'commercial-tickets' }" class="my-tickets-btn">
+                <i class="bi bi-ticket-perforated"></i> My Tickets
+            </RouterLink>
+        </div>
 
         <form class="form" @submit.prevent="handleSubmit">
             <div class="form-row">
@@ -153,10 +158,36 @@ async function handleSubmit() {
     width: 100%;
 }
 
-.page-title {
-    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.commercial-tickets h2 {
+    font-size: 20px;
     color: var(--text);
-    margin-bottom: 28px;
+    margin: 0;
+}
+
+.my-tickets-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.2s;
+
+    &:hover {
+        background: var(--primary-hover);
+    }
 }
 
 .form {

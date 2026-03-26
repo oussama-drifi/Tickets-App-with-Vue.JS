@@ -8,6 +8,7 @@ import StatusFilter from '@/components/ui/StatusFilter.vue'
 import CategoryFilter from '@/components/ui/CategoryFilter.vue'
 
 const PAGE_SIZE = 5
+
 const tickets = ref([])
 const loading = ref(false)
 const loadingMore = ref(false)
@@ -460,4 +461,3 @@ onMounted(() => fetchTickets())
     }
 }
 </style>
-
