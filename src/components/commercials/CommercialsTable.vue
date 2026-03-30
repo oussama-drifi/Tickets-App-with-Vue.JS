@@ -1,37 +1,20 @@
 <script setup>
-import { onMounted, watch } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCommercialsStore } from '@/stores/commercials'
 import { storeToRefs } from 'pinia'
-import CustomSelect from '@/components/ui/CustomSelect.vue'
 
 const commercialsStore = useCommercialsStore()
 const router = useRouter()
 
 const { fetchCommercials } = commercialsStore
+
 const { filteredCommercials,
         isLoading, 
         isLoadingMore, 
         hasMore,
-        fetched, 
-        fetchedAll,
-        filterSearch, 
-        filterStatus 
+        fetched
     } = storeToRefs(commercialsStore)
-
-const statusOptions = [
-    { value: 'all', label: 'all' },
-    { value: 'active', label: 'active' },
-    { value: 'suspended', label: 'suspended' },
-]
-
-// debounced search
-let debounceTimer = null
-watch([filterSearch, filterStatus], () => {
-    if (fetchedAll.value) return
-    clearTimeout(debounceTimer)
-    debounceTimer = setTimeout(() => fetchCommercials(), 300)
-})
 
 onMounted(() => {
     if (!fetched.value) fetchCommercials()
@@ -67,22 +50,14 @@ onMounted(() => {
         </table>
     </div>
 
+    <!-- Empty state -->
+    <div v-else-if="!filteredCommercials.length" class="empty-state">
+        <i class="bi bi-person-x"></i>
+        <p>No commercials found</p>
+    </div>
+
     <!-- Data -->
     <div v-else>
-        <div class="filters">
-            <input
-                class="search-input"
-                type="text"
-                placeholder="Search for commercial"
-                v-model="filterSearch"
-            />
-            <CustomSelect
-                v-model="filterStatus"
-                :options="statusOptions"
-                placeholder="Filter by status"
-            />
-        </div>
-
         <div class="table-wrapper">
             <table class="commercials-table">
                 <thead>
@@ -154,34 +129,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.filters {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 14px;
-    margin-bottom: 14px;
-    width: fit-content;
-}
-
-.search-input {
-    background-color: var(--surface);
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 14px;
-    outline: none;
-    color: var(--text);
-    font-size: 14px;
-    font-family: inherit;
-    transition: border-color 0.2s;
-}
-
-.search-input:focus {
-    border-color: var(--primary);
-}
-
-.filters :deep(.custom-select) {
-    width: 180px;
-}
 
 .table-wrapper {
     background: var(--surface);
@@ -312,6 +259,24 @@ onMounted(() => {
 .ticket-count {
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+}
+
+/* Empty state */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 12px;
+    color: var(--text-muted);
+    opacity: 0.6;
+    background-color: #fff5ee;
+    border: 2px solid var(--border);
+}
+
+.empty-state i {
+    font-size: 40px;
 }
 
 /* Skeleton */

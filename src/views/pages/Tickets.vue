@@ -1,8 +1,9 @@
 <script setup>
 import { useTicketsStore } from '@/stores/tickets';
 import { storeToRefs } from 'pinia';
-import { onMounted, computed, watch, onUnmounted, onBeforeMount } from 'vue';
+import { onMounted, computed, watch } from 'vue';
 import { useSorting } from '@/composables/useSorting';
+// components
 import TicketsTable from '@/components/tickets/TicketsTable.vue';
 import StatusFilter from '@/components/ui/StatusFilter.vue';
 import CategoryFilter from '@/components/ui/CategoryFilter.vue';
@@ -35,9 +36,11 @@ function onStatusChange(ticket, status) {
 }
 
 
+// the watcher callback runs before the mounted's
 let skipNextWatch = false
 onMounted(() => {
-    skipNextWatch = true
+    const hadFilters = !!(filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value)
+    if (hadFilters) skipNextWatch = true
     clearFilters()
     if (!fetched.value) fetchTickets()
 })
@@ -49,13 +52,6 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
     }
     if (!fetchedAll.value) fetchTickets()
 })
-
-// const hasMoreFilteredTickets = computed(() => {
-//     if (filteredTickets.value && (filterCategory.value || filterStatus.value || filterDateFrom.value || filterDateTo.value)) {
-//         return false
-//     }
-//     return true
-// })
 
 </script>
 
@@ -98,7 +94,7 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
         </div>
 
         <!-- Empty state -->
-        <div v-else-if="!isLoading && !tickets.length" class="empty-state">
+        <div v-else-if="!isLoading && !filteredTickets.length" class="empty-state">
             <i class="bi bi-ticket-perforated"></i>
             <p>No tickets found</p>
         </div>
@@ -120,28 +116,28 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
 </template>
 
 <style scoped>
+
 .tickets-page {
     padding-right: 20px;
-}
 
-.page-header {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 20px;
-}
+    .page-header {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 20px;
 
-.page-header h1 {
-    color: var(--text);
-    font-weight: 700;
-}
+        h1 {
+            color: var(--text);
+            font-weight: 700;
+        }
 
-.ticket-count {
-    font-size: 14px;
-    color: var(--text-muted);
-    opacity: 0.6;
+        .ticket-count {
+            font-size: 14px;
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+    }
 }
-
 /* ---- Error / Empty ---- */
 .error-state, .empty-state {
     display: flex;
@@ -152,23 +148,23 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
     gap: 12px;
     color: var(--text-muted);
     opacity: 0.6;
-}
 
-.error-state i, .empty-state i {
-    font-size: 40px;
-}
+    i {
+        font-size: 40px;
+    }
 
-.error-state button {
-    margin-top: 8px;
-    padding: 8px 20px;
-    border-radius: 8px;
-    border: none;
-    background: var(--primary);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
+    button {
+        margin-top: 8px;
+        padding: 8px 20px;
+        border-radius: 8px;
+        border: none;
+        background: var(--primary);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+    }
 }
 
 /* ---- Filters ---- */
@@ -178,58 +174,58 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
     gap: 14px;
     margin-bottom: 18px;
     flex-wrap: wrap;
-}
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
 
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
+        label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
 
-.filter-group label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    opacity: 0.6;
-}
+        input[type="date"] {
+            padding: 7px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            font-family: inherit;
+            min-width: 150px;
+            transition: border-color 0.15s;
 
-.filter-group input[type="date"] {
-    padding: 7px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface);
-    color: var(--text);
-    font-size: 13px;
-    font-family: inherit;
-    min-width: 150px;
-    transition: border-color 0.15s;
-}
+            &:focus {
+                outline: none;
+                border-color: var(--primary);
+            }
+        }
+    }
 
-.filter-group input[type="date"]:focus {
-    outline: none;
-    border-color: var(--primary);
-}
+    .clear-filters {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 7px 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text-muted);
+        font-size: 13px;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.15s;
 
-.clear-filters {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 7px 14px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface);
-    color: var(--text-muted);
-    font-size: 13px;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.15s;
-}
-
-.clear-filters:hover {
-    border-color: var(--danger);
-    color: var(--danger);
+        &:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+    }
 }
 
 @media (max-width: 768px) {
