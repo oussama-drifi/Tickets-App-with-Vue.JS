@@ -5,7 +5,7 @@ const routes = [
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/views/pages/LoginView.vue')
+    component: () => import('@/views/pages/LoginPage.vue')
   },
   {
     path: '/admin',
@@ -17,7 +17,7 @@ const routes = [
       {
         path: 'dashboard',
         name: 'dashboard',
-        component: () => import('@/views/pages/Dashboard.vue')
+        component: () => import('@/views/pages/DashboardPage.vue')
       },
       {
         path: 'commercials',
@@ -28,7 +28,7 @@ const routes = [
           {
             path: 'all',
             name: 'commercial-all',
-            component: () => import('@/views/pages/AllCommercials.vue')
+            component: () => import('@/views/pages/CommercialsPage.vue')
           },
           {
             path: 'details/:id?',
@@ -40,17 +40,17 @@ const routes = [
       {
         path: 'tickets',
         name: 'tickets',
-        component: () => import('@/views/pages/Tickets.vue')
+        component: () => import('@/views/pages/TicketsPage.vue')
       },
       {
         path: 'cards',
         name: 'cards',
-        component: () => import('@/views/pages/Cards.vue')
+        component: () => import('@/views/pages/CardsPage.vue')
       },
       {
         path: 'settings',
         name: 'settings',
-        component: () => import('@/views/pages/Settings.vue')
+        component: () => import('@/views/pages/SettingsPage.vue')
       }
     ]
   },
