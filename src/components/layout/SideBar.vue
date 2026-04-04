@@ -62,6 +62,9 @@ onBeforeUnmount(() => {
                 <RouterLink :to="{ name: 'tickets' }" class="nav-link" data-tooltip="Tickets">
                     <i class="bi bi-ticket-perforated"></i>
                 </RouterLink>
+                <RouterLink :to="{ name: 'cards' }" class="nav-link" data-tooltip="Cards">
+                    <i class="bi bi-credit-card-2-back"></i>
+                </RouterLink>
             </nav>
         </div>
 

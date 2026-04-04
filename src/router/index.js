@@ -43,6 +43,11 @@ const routes = [
         component: () => import('@/views/pages/Tickets.vue')
       },
       {
+        path: 'cards',
+        name: 'cards',
+        component: () => import('@/views/pages/Cards.vue')
+      },
+      {
         path: 'settings',
         name: 'settings',
         component: () => import('@/views/pages/Settings.vue')
