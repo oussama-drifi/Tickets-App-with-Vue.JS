@@ -81,10 +81,10 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
     font-family: inherit;
     white-space: nowrap;
     transition: border-color 0.15s;
-}
 
-.trigger:hover {
-    border-color: var(--primary);
+    &:hover {
+        border-color: var(--primary);
+    }
 }
 
 .chevron {
