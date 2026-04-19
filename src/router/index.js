@@ -45,7 +45,24 @@ const routes = [
       {
         path: 'cards',
         name: 'cards',
-        component: () => import('@/views/pages/CardsPage.vue')
+        component: () => import('@/views/pages/cards/Main.vue'),
+        children: [
+          {
+            path: 'all',
+            name: 'all',
+            component: () => import('@/views/pages/cards/CardsPage.vue')
+          },
+          {
+            path: 'categories',
+            name: 'categories',
+            component: () => import('@/views/pages/cards/CategoriesPage.vue')
+          },
+          {
+            path: 'payments',
+            name: 'payments',
+            component: () => import('@/views/pages/cards/PaymentsPage.vue')
+          },
+        ]
       },
       {
         path: 'settings',
