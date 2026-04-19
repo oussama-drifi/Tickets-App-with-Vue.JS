@@ -46,6 +46,7 @@ const routes = [
         path: 'cards',
         name: 'cards',
         component: () => import('@/views/pages/cards/Main.vue'),
+        redirect: {name: 'all'},
         children: [
           {
             path: 'all',

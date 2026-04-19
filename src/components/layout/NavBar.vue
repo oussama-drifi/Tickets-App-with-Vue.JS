@@ -1,13 +1,19 @@
-<script setup>
+<script setup lang="ts">
+
+type link = {
+    label: string
+    icon: string
+    path: string
+}
+defineProps({
+    links: Array<link>
+})
 </script>
 <template>
     <header>
         <nav class="nav-bar">
-            <RouterLink :to="{ name: 'commercial-all' }" class="nav-link">
-                <i class="bi bi-card-list"></i> <span>all commercials</span>
-            </RouterLink>
-            <RouterLink :to="{ name: 'commercial-details' }" class="nav-link">
-                <i class="bi bi-info-circle"></i> <span>commercial details</span>
+            <RouterLink v-for="link in links" :to="{ name: link.path }" class="nav-link">
+                <i :class="link.icon"></i> <span>{{ link.label }}</span>
             </RouterLink>
         </nav>
     </header>

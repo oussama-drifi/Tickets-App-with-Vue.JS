@@ -1,3 +1,3 @@
 <template>
-    <h1>categories page</h1>
+    <h2>categories page</h2>
 </template>

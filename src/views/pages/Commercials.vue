@@ -25,13 +25,26 @@ function onCommercialCreated() {
     drawerOpen.value = false
 }
 
+const commercialPageLinks = [
+    {
+        icon: "bi bi-card-list",
+        path: "commercial-all",
+        label: "all commercials",
+    }, 
+    {
+        icon: "bi bi-info-circle",
+        path: "commercial-details",
+        label: "commercial details",
+    }
+]
+
 </script>
 
 <template>
     <h1>Commercials</h1>
     <div class="commercials-toolbar">
         <div class="toolbar-left">
-            <NavBar />
+            <NavBar :links="commercialPageLinks"/>
             <CommercialSearch
                 v-if="isDetailsPage"
                 :model-value="selectedId"
