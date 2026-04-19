@@ -22,18 +22,18 @@ const routes = [
       {
         path: 'commercials',
         name: 'commercials',
-        component: () => import('@/views/pages/Commercials.vue'),
+        component: () => import('@/views/pages/commercials/Main.vue'),
         redirect: { name: 'commercial-all' },
         children: [
           {
             path: 'all',
             name: 'commercial-all',
-            component: () => import('@/views/pages/CommercialsPage.vue')
+            component: () => import('@/views/pages/commercials/CommercialsPage.vue')
           },
           {
             path: 'details/:id?',
             name: 'commercial-details',
-            component: () => import('@/views/pages/CommercialDetails.vue')
+            component: () => import('@/views/pages/commercials/CommercialDetailsPage.vue')
           }
         ]
       },

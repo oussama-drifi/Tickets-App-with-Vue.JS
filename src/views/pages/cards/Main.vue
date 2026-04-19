@@ -22,7 +22,7 @@ const cardsPageLinks = [
 </script>
 
 <template>
-    <h2>this is the page for all about cards & payments</h2>
+    <h1>Cards</h1>
     <NavBar :links="cardsPageLinks"/>
     <RouterView />
 </template>
@@ -37,5 +37,4 @@ const cardsPageLinks = [
         color: var(--primary);
     }
 }
-
 </style>
