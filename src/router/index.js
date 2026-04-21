@@ -82,7 +82,7 @@ const routes = [
       {
         path: 'tickets',
         name: 'commercial-tickets',
-        component: () => import('@/views/commercial/CommercialTickets.vue')
+        component: () => import('@/views/admin/CommercialTickets.vue')
       },
       {
         path: 'new-ticket',

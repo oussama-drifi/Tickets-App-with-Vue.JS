@@ -8,7 +8,7 @@ const props = defineProps({
     tickets: { type: Array, required: true },
     loading: { type: Boolean, default: false },
     loadingMore: { type: Boolean, default: false },
-    hasMore: { type: Boolean, default: false },
+    // hasMore: { type: Boolean, default: false },
     skeletonRows: { type: Number, default: 5 },
     sortBy: { type: String, default: null },
     sortDir: { type: String, default: 'asc'},
@@ -21,7 +21,7 @@ const categoryIcon = {
     hotel: 'bi bi-building',
     work: 'bi bi-briefcase',
 }
-const statuses = ['pending', 'verified', 'paid', 'rejected']
+const statuses = ['pending', 'verified', 'rejected']
 
 const emit = defineEmits(['status-change', 'sort', 'load-more']);
 
@@ -250,11 +250,13 @@ onUnmounted(() => {
             </tbody>
         </table>
         <!-- Show More button -->
-        <div v-if="hasMore && !loadingMore" class="show-more-wrapper">
+        <!-- <div v-if="hasMore && !loadingMore" class="show-more-wrapper">
             <button class="show-more-btn" @click="emit('load-more')">
                 <i class="bi bi-arrow-down-circle"></i> Show More
             </button>
-        </div>
+        </div> -->
+
+        
     </div>
 
     <!-- Fixed-position dropdown (outside scroll container) -->

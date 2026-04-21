@@ -2,16 +2,16 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { adminApi } from '@/services/api'
 
-const PAGE_SIZE = 5
+const PAGE_SIZE = 7
 
 export const useTicketsStore = defineStore('tickets', () => {
-    const tickets = ref([])
+    const tickets = ref({})
     const isLoading = ref(false)
     const error = ref(null)
     const isLoadingMore = ref(false)
 
     const fetched = ref(false)
-    const fetchedAll = ref(false);
+    const fetchedAll = ref(false) // use just filter instead of fetching
 
     // Pagination of all tickets
     const currentPage = ref(1) // always start from first page
@@ -36,26 +36,31 @@ export const useTicketsStore = defineStore('tickets', () => {
         }
     }
 
-    function buildQuery(page = 1) {
+    function buildQuery() {
         const params = new URLSearchParams()
         if (filterStatus.value) params.set('status', filterStatus.value)
         if (filterCategory.value) params.set('category', filterCategory.value)
         if (filterDateFrom.value) params.set('dateFrom', filterDateFrom.value)
         if (filterDateTo.value) params.set('dateTo', filterDateTo.value)
-        params.set('page', page)
+        params.set('page', currentPage.value)
         params.set('limit', PAGE_SIZE)
         const qs = params.toString()
         return qs ? `?${qs}` : ''
     }
 
-    const filteredTickets = computed(() => tickets.value.filter(filterTickets))
+    // const filteredTickets = computed(() => tickets.value.filter(filterTickets))
+
+    const currentPageTickets = computed(() => tickets.value[currentPage].filter(filterTickets))
 
     async function fetchTickets(loadMore = false) {
+
+        console.log("fetched")
+
+        if (tickets.value[currentPage.value]) return
+
         abortPending()
         abortController = new AbortController()
         const { signal } = abortController
-
-        const page = loadMore ? currentPage.value + 1 : 1
 
         if (loadMore) {
             isLoadingMore.value = true
@@ -65,19 +70,23 @@ export const useTicketsStore = defineStore('tickets', () => {
         }
 
         try {
-            const data = await adminApi.get(`/tickets${buildQuery(page)}`, { signal })
+            const data = await adminApi.get(`/tickets${buildQuery()}`, { signal })
 
-            tickets.value = loadMore ? [...tickets.value, ...data.tickets] : data.tickets
+            // tickets.value = loadMore ? [...tickets.value, ...data.tickets] : data.tickets
             
+            tickets.currentPage = data.tickets
+
             currentPage.value = data.page
             totalPages.value = data.totalPages
             total.value = data.total
             fetched.value = true
+
             if (!filterStatus.value && !filterCategory.value && 
                 !filterDateFrom.value && !filterDateTo.value
                 && currentPage.value === totalPages.value) {
                 fetchedAll.value = true
             }
+            
         } catch (err) {
             if (err.name === 'AbortError') return
             if (!loadMore) error.value = err.message
@@ -89,6 +98,7 @@ export const useTicketsStore = defineStore('tickets', () => {
             }
         }
     }
+
 
     const selectedCommercialTickets = ref([])
     const commercialTicketsFetched = ref(false)
@@ -173,9 +183,9 @@ export const useTicketsStore = defineStore('tickets', () => {
     }
 
     return {
-        tickets, filteredTickets, isLoading, isLoadingMore, error, fetched, fetchedAll, commercialTicketsFetched,commercialFetchedAll,
+        tickets, isLoading, isLoadingMore, error, fetched, fetchedAll, commercialTicketsFetched,commercialFetchedAll,
         filterStatus, filterCategory, filterDateFrom, filterDateTo,
-        currentPage, totalPages, total, hasMore,
+        currentPage, totalPages, total, hasMore, currentPageTickets,
         selectedCommercialTickets, filteredCommercialTickets,
         commercialCurrentPage, commercialTotalPages, commercialTotal, commercialHasMore,
         fetchTickets, loadCommercialTickets, clearFilters, abortPending, abortPendingCommercial

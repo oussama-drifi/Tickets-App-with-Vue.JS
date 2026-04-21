@@ -13,20 +13,22 @@ const store = useTicketsStore()
 const { isLoading,
         isLoadingMore,
         error, 
-        tickets,
-        filteredTickets,
+        // tickets,
+        // filteredTickets,
+        currentPageTickets,
         fetched,
         fetchedAll,
         hasMore,
-        total,
+        // total,
         filterStatus,
         filterCategory,
         filterDateFrom,
-        filterDateTo
+        filterDateTo,
         } = storeToRefs(store);
 
 const { fetchTickets, clearFilters } = store
-const { sortBy, sortDir, toggleSort, sortedItems: sortedTickets } = useSorting(filteredTickets)
+// const { sortBy, sortDir, toggleSort, sortedItems: sortedTickets } = useSorting(filteredTickets)
+const { sortBy, sortDir, toggleSort, sortedItems: sortedTickets } = useSorting(currentPageTickets)
 
 // control clear button appearance
 const hasActiveFilters = computed(() => filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value)
@@ -35,7 +37,6 @@ function onStatusChange(ticket, status) {
     ticket.status = status
 }
 
-
 // the watcher callback runs before the mounted's
 let skipNextWatch = false
 onMounted(() => {
@@ -43,6 +44,7 @@ onMounted(() => {
     if (hadFilters) skipNextWatch = true
     clearFilters()
     if (!fetched.value) fetchTickets()
+    console.log("hello")
 })
 
 watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
@@ -59,9 +61,9 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
     <div class="tickets-page">
         <div class="page-header">
             <h1>Tickets</h1>
-            <span class="ticket-count" v-if="!isLoading">
+            <!-- <span class="ticket-count" v-if="!isLoading">
                 {{ tickets.length }}<template v-if="hasActiveFilters"> / {{ total }}</template> total
-            </span>
+            </span> -->
         </div>
 
         <div class="filters">
@@ -94,10 +96,10 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
         </div>
 
         <!-- Empty state -->
-        <div v-else-if="!isLoading && !filteredTickets.length" class="empty-state">
+        <!-- <div v-else-if="!isLoading && !filteredTickets.length" class="empty-state">
             <i class="bi bi-ticket-perforated"></i>
             <p>No tickets found</p>
-        </div>
+        </div> -->
 
         <!-- Table (handles its own loading skeleton) -->
         <TicketsTable
@@ -108,6 +110,7 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
             :has-more="hasMore"
             :sort-by="sortBy"
             :sort-dir="sortDir"
+            :skeletonRows="7"
             @status-change="onStatusChange"
             @sort="toggleSort"
             @load-more="fetchTickets(true)"

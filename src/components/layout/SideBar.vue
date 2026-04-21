@@ -10,6 +10,7 @@ const isDark = ref(document.documentElement.getAttribute('data-theme') === 'dark
 const showProfile = ref(false)
 const profileCardRef = ref(null)
 const profileBtnRef = ref(null)
+const isExpanded = ref(true)
 
 const toggleTheme = () => {
     isDark.value = !isDark.value
@@ -46,24 +47,34 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <aside class="sidebar">
+    <aside
+        class="sidebar"
+        :class="{ 'is-expanded': isExpanded }"
+    >
         <div class="sidebar-top">
             <div class="sidebar-logo">
                 <img src="/logo.png" alt="Logo" />
+                <button class="toggle-btn" @click="isExpanded = !isExpanded" :title="isExpanded ? 'Collapse' : 'Expand'">
+                    <i class="bi" :class="isExpanded ? 'bi-chevron-left' : 'bi-chevron-right'"></i>
+                </button>
             </div>
 
             <nav class="sidebar-nav primary-links">
                 <RouterLink :to="{ name: 'dashboard' }" class="nav-link" data-tooltip="Dashboard">
                     <i class="bi bi-columns-gap"></i>
+                    <span class="nav-label">Dashboard</span>
                 </RouterLink>
                 <RouterLink :to="{ name: 'commercials' }" class="nav-link" data-tooltip="Commercials">
                     <i class="bi bi-people"></i>
+                    <span class="nav-label">Commercials</span>
                 </RouterLink>
                 <RouterLink :to="{ name: 'tickets' }" class="nav-link" data-tooltip="Tickets">
                     <i class="bi bi-ticket-perforated"></i>
+                    <span class="nav-label">Tickets</span>
                 </RouterLink>
                 <RouterLink :to="{ name: 'cards' }" class="nav-link" data-tooltip="Cards">
                     <i class="bi bi-credit-card-2-back"></i>
+                    <span class="nav-label">Cards</span>
                 </RouterLink>
             </nav>
         </div>
@@ -72,12 +83,15 @@ onBeforeUnmount(() => {
             <span class="nav-link" data-tooltip="Theme" @click="toggleTheme">
                 <i v-if="isDark" class="bi bi-brightness-high"></i>
                 <i v-else class="bi bi-moon"></i>
+                <span class="nav-label">Theme</span>
             </span>
             <RouterLink to="/admin/settings" class="nav-link" data-tooltip="Settings">
                 <i class="bi bi-gear"></i>
+                <span class="nav-label">Settings</span>
             </RouterLink>
             <span ref="profileBtnRef" class="nav-link" :class="{ active: showProfile }" data-tooltip="Profile" @click="toggleProfile">
                 <i class="bi bi-person"></i>
+                <span class="nav-label">Profile</span>
             </span>
         </nav>
 
@@ -111,71 +125,154 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* ─── Width tokens — change these two values to resize the sidebar ─── */
+.sidebar {
+    --sidebar-collapsed-width: 64px;
+    --sidebar-expanded-width: 220px; /* ← change expanded width here */
+}
+
 .sidebar {
     position: relative;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    width: clamp(48px, 5vw, 72px);
+    width: var(--sidebar-collapsed-width);
     height: 100%;
     background-color: var(--surface);
     border: 2px solid var(--border);
     border-radius: clamp(8px, 1vw, 14px);
-    padding: 5px;
+    padding: 8px;
+    overflow: visible;
+    flex-shrink: 0;
+
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.sidebar.is-expanded {
+    width: var(--sidebar-expanded-width);
+    align-items: flex-start;
+}
+
+/* ─── Logo ─── */
 .sidebar-logo {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    width: 100%;
     padding-bottom: clamp(10px, 1.5vw, 20px);
     border-bottom: 1px solid var(--border);
     margin-bottom: clamp(8px, 1vw, 16px);
+    gap: 8px;
 
     img {
         width: clamp(28px, 3.5vw, 44px);
         height: clamp(28px, 3.5vw, 44px);
         object-fit: contain;
+        flex-shrink: 0;
     }
 }
 
-
-.sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: clamp(2px, 0.4vw, 6px);
-}
-
-.nav-link {
-    position: relative;
-    display: flex;
+.toggle-btn {
+    display: none;
     align-items: center;
     justify-content: center;
-    width: clamp(36px, 4vw, 54px);
-    height: clamp(36px, 4vw, 54px);
-    border-radius: clamp(6px, 0.8vw, 12px);
-    text-decoration: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
     color: var(--text-muted);
-    transition: background-color 0.2s, color 0.2s;
     cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.2s, color 0.2s;
+
+    i {
+        font-size: 13px;
+    }
 
     &:hover {
         background-color: var(--border);
         color: var(--text);
     }
+}
+
+.sidebar.is-expanded .sidebar-logo {
+    flex-direction: row;
+}
+
+.sidebar.is-expanded .toggle-btn {
+    display: flex;
+    margin-left: auto;
+}
+
+.sidebar:not(.is-expanded) .toggle-btn {
+    display: flex;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+}
+
+/* ─── Nav groups ─── */
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(2px, 0.4vw, 6px);
+    width: 100%;
+}
+
+.sidebar.is-expanded .sidebar-nav {
+    align-items: flex-start;
+}
+
+/* ─── Nav links ─── */
+.nav-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: clamp(6px, 0.8vw, 12px);
+    text-decoration: none;
+    color: var(--text-muted);
+    transition:
+        background-color 0.2s,
+        color 0.2s,
+        width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    i {
+        font-size: clamp(16px, 2vw, 22px);
+        flex-shrink: 0;
+        width: 32px;
+        text-align: center;
+    }
+
+    &:hover {
+        background-color: var(--border);
+        color: var(--text);
+    }
+
     &.router-link-active {
         outline: 2px solid var(--primary);
         border: 2px solid var(--surface);
         background-color: var(--primary);
         color: var(--bg);
     }
-    i {
-        font-size: clamp(16px, 2vw, 28px);
+
+    &.active {
+        background-color: var(--border);
+        color: var(--text);
     }
 
-    /* Custom tooltip */
+    /* Tooltip — collapsed only */
     &::after {
         content: attr(data-tooltip);
         position: absolute;
@@ -194,7 +291,7 @@ onBeforeUnmount(() => {
         transition: opacity 0.2s;
         z-index: 100;
     }
-    
+
     &::before {
         content: '';
         position: absolute;
@@ -208,24 +305,54 @@ onBeforeUnmount(() => {
         transition: opacity 0.2s;
         z-index: 100;
     }
-    
+
     &:hover::after,
     &:hover::before {
         opacity: 1;
     }
-    
-    &.active {
-        background-color: var(--border);
-        color: var(--text);
+}
+
+/* ─── Expanded nav-link overrides ─── */
+.sidebar.is-expanded .nav-link {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0 8px;
+    gap: 10px;
+
+    /* hide tooltip in expanded state */
+    &::after,
+    &::before {
+        display: none;
     }
 }
 
+/* ─── Label ─── */
+.nav-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: inherit;
+    opacity: 0;
+    max-width: 0;
+    overflow: hidden;
+    transition:
+        opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+        max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+.sidebar.is-expanded .nav-label {
+    opacity: 1;
+    max-width: 160px;
+    pointer-events: auto;
+}
+
+/* ─── Secondary nav ─── */
 .secondary-links {
     border-top: 1px solid var(--border);
     padding-top: clamp(8px, 1vw, 16px);
 }
 
-/* Profile Card */
+/* ─── Profile Card ─── */
 .profile-card {
     position: absolute;
     bottom: 10px;
@@ -256,7 +383,7 @@ onBeforeUnmount(() => {
             font-size: 22px;
             flex-shrink: 0;
         }
-        
+
         .profile-info {
             display: flex;
             flex-direction: column;
@@ -270,7 +397,7 @@ onBeforeUnmount(() => {
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
-            
+
             .profile-role {
                 font-size: 12px;
                 color: var(--text-muted);
@@ -291,14 +418,14 @@ onBeforeUnmount(() => {
             gap: 10px;
             font-size: 13px;
             color: var(--text-muted);
-        
+
             i {
                 font-size: 15px;
                 width: 18px;
                 text-align: center;
                 flex-shrink: 0;
             }
-        
+
             span {
                 white-space: nowrap;
                 overflow: hidden;
@@ -306,11 +433,11 @@ onBeforeUnmount(() => {
             }
         }
     }
-    
+
     .profile-card-footer {
-        padding: 10px 10px;
+        padding: 10px;
         border-top: 1px solid var(--border);
-    
+
         .logout-btn {
             display: flex;
             align-items: center;
@@ -325,11 +452,11 @@ onBeforeUnmount(() => {
             font-weight: 500;
             cursor: pointer;
             transition: background-color 0.2s;
-    
+
             &:hover {
                 background-color: rgba(239, 68, 68, 0.1);
             }
-    
+
             i {
                 font-size: 16px;
             }
@@ -337,12 +464,7 @@ onBeforeUnmount(() => {
     }
 }
 
-
-
-
-
-
-/* Profile card transition */
+/* ─── Profile card transition ─── */
 .profile-card-enter-active,
 .profile-card-leave-active {
     transition: opacity 0.2s, transform 0.2s;
@@ -354,18 +476,18 @@ onBeforeUnmount(() => {
     transform: translateY(8px);
 }
 
-/* Tablet: compact sidebar */
+/* ─── Tablet ─── */
 @media (max-width: 1024px) {
     .sidebar {
-        width: clamp(44px, 6vw, 56px);
+        --sidebar-collapsed-width: 56px;
     }
 }
 
-/* Mobile: sidebar becomes a bottom navigation bar */
+/* ─── Mobile: bottom nav bar ─── */
 @media (max-width: 768px) {
     .sidebar {
         flex-direction: row;
-        width: 100%;
+        width: 100% !important;
         height: auto;
         padding: 8px 12px;
         position: fixed;
@@ -374,6 +496,8 @@ onBeforeUnmount(() => {
         z-index: 50;
         border-radius: 0;
         border-width: 2px 0 0 0;
+        align-items: center;
+        transition: none;
     }
 
     .sidebar-top {
@@ -389,28 +513,32 @@ onBeforeUnmount(() => {
         padding-right: 8px;
         border-right: 1px solid var(--border);
         margin-right: 4px;
-    }
+        width: auto;
 
-    .sidebar-logo img {
-        width: 24px;
-        height: 24px;
+        img {
+            width: 24px;
+            height: 24px;
+        }
     }
 
     .sidebar-nav {
         flex-direction: row;
         gap: 4px;
+        align-items: center;
+        width: auto;
     }
 
     .nav-link {
-        width: 40px;
+        width: 40px !important;
         height: 40px;
+        padding: 0 !important;
+        justify-content: center !important;
     }
 
-    .nav-link i {
-        font-size: 20px;
+    .nav-label {
+        display: none;
     }
 
-    /* Hide tooltips on mobile (use touch, no hover) */
     .nav-link::after,
     .nav-link::before {
         display: none;
