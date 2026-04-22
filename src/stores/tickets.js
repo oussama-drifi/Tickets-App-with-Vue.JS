@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { adminApi } from '@/services/api'
 
-const PAGE_SIZE = 7
+const PAGE_SIZE = 8
 
 export const useTicketsStore = defineStore('tickets', () => {
     const tickets = ref({})
