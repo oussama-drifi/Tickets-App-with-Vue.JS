@@ -7,6 +7,7 @@ const routes = [
     name: 'login',
     component: () => import('@/views/pages/LoginPage.vue')
   },
+  // admin routes
   {
     path: '/admin',
     name: 'admin',
@@ -72,6 +73,7 @@ const routes = [
       }
     ]
   },
+  // commercial routes
   {
     path: '/commercial',
     name: 'commercial',
@@ -82,7 +84,7 @@ const routes = [
       {
         path: 'tickets',
         name: 'commercial-tickets',
-        component: () => import('@/views/admin/CommercialTickets.vue')
+        component: () => import('@/views/commercial/CommercialTickets.vue')
       },
       {
         path: 'new-ticket',
