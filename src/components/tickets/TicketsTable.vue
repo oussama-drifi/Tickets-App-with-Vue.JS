@@ -3,11 +3,12 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { adminApi } from '@/services/api';
 import ImageModal from '@/components/ui/ImageModal.vue';
 import { formatDate } from '@/utils';
+import { ChevronDown, Image } from '@lucide/vue';
 
 const props = defineProps({
     tickets: { type: Array, required: true },
     loading: { type: Boolean, default: false },
-    loadingMore: { type: Boolean, default: false },
+    // loadingMore: { type: Boolean, default: false },
     // hasMore: { type: Boolean, default: false },
     skeletonRows: { type: Number, default: 5 },
     sortBy: { type: String, default: null },
@@ -203,7 +204,7 @@ onUnmounted(() => {
                 <tr v-for="ticket in tickets" :key="ticket.id">
                     <td>
                         <div class="ticket-image clickable" @click="openImageModal(ticket)">
-                            <i class="bi bi-image"></i>
+                            <Image />
                         </div>
                     </td>
                     <td>
@@ -276,6 +277,7 @@ onUnmounted(() => {
                 <span class="status-dot"></span>
                 {{ status }}
                 <i v-if="tickets.find(t => t.id === openDropdown)?.status === status" class="bi bi-check2"></i>
+                <!-- <ChevronDown v-if="tickets.find(t => t.id === openDropdown)?.status === status" /> -->
             </button>
         </div>
     </Teleport>
@@ -394,7 +396,7 @@ onUnmounted(() => {
 }
 
 .tickets-table td {
-    padding: 14px 18px;
+    padding: 5px 18px;
     font-size: 14px;
     color: var(--text);
     border-top: 1px solid var(--border);

@@ -166,7 +166,7 @@ onMounted(() => {
 }
 
 .commercials-table th {
-    padding: 14px 18px;
+    padding: 12px 18px;
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
@@ -178,7 +178,7 @@ onMounted(() => {
 }
 
 .commercials-table td {
-    padding: 14px 18px;
+    padding: 7px 18px;
     font-size: 14px;
     color: var(--text);
     border-top: 1px solid var(--border);

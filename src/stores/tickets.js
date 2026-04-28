@@ -8,7 +8,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     const tickets = ref({})
     const isLoading = ref(false)
     const error = ref(null)
-    const isLoadingMore = ref(false)
+    // const isLoadingMore = ref(false)
 
     const fetched = ref(false)
     const fetchedAll = ref(false) // use just filter instead of fetching
@@ -18,13 +18,19 @@ export const useTicketsStore = defineStore('tickets', () => {
     const totalPages = ref(1) // initialy
     const total = ref(0) // initialy
 
-    const hasMore = computed(() => currentPage.value < totalPages.value)
+    // Pagination of filtered tickets
+    const currentFilteredPage = ref(1)
+    const totalFilteredPages = ref(1)
+    const totalFiltered = ref(0)
+
+    const filteredTickets = ref({})
 
     // Filters
     const filterStatus = ref('')
     const filterCategory = ref('')
     const filterDateFrom = ref('')
     const filterDateTo = ref('')
+
 
     // Abort controller
     let abortController = null
@@ -36,84 +42,151 @@ export const useTicketsStore = defineStore('tickets', () => {
         }
     }
 
-    function buildQuery() {
-        const params = new URLSearchParams()
-        if (filterStatus.value) params.set('status', filterStatus.value)
-        if (filterCategory.value) params.set('category', filterCategory.value)
-        if (filterDateFrom.value) params.set('dateFrom', filterDateFrom.value)
-        if (filterDateTo.value) params.set('dateTo', filterDateTo.value)
-        params.set('page', currentPage.value)
-        params.set('limit', PAGE_SIZE)
-        const qs = params.toString()
-        return qs ? `?${qs}` : ''
-    }
-
     // const filteredTickets = computed(() => tickets.value.filter(filterTickets))
 
-    const currentPageTickets = computed(() => tickets.value[currentPage].filter(filterTickets))
+    // const currentPageTickets = computed(() => tickets.value[currentPage.value].filter(filterTickets))
 
-    async function fetchTickets(loadMore = false) {
+    // async function fetchTickets(loadMore = false) {
 
-        console.log("fetched")
+    //     console.log("fetched")
 
-        if (tickets.value[currentPage.value]) return
+    //     if (tickets.value[currentPage.value]) return
+
+    //     abortPending()
+    //     abortController = new AbortController()
+    //     const { signal } = abortController
+
+    //     if (loadMore) {
+    //         isLoadingMore.value = true
+    //     } else {
+    //         isLoading.value = true
+    //         error.value = null
+    //     }
+
+    //     try {
+    //         const data = await adminApi.get(`/tickets${buildQuery()}`, { signal })
+
+    //         // tickets.value = loadMore ? [...tickets.value, ...data.tickets] : data.tickets
+            
+    //         tickets.currentPage = data.tickets
+
+    //         currentPage.value = data.page
+    //         totalPages.value = data.totalPages
+    //         total.value = data.total
+    //         fetched.value = true
+
+    //         if (!filterStatus.value && !filterCategory.value && 
+    //             !filterDateFrom.value && !filterDateTo.value
+    //             && currentPage.value === totalPages.value) {
+    //             fetchedAll.value = true
+    //         }
+            
+    //     } catch (err) {
+    //         if (err.name === 'AbortError') return
+    //         if (!loadMore) error.value = err.message
+    //     } finally {
+    //         if (signal === abortController?.signal) {
+    //             isLoading.value = false
+    //             isLoadingMore.value = false
+    //             abortController = null
+    //         }
+    //     }
+    // }
+
+    const filtersActive = computed(() =>
+        !!(filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value)
+    )
+
+    const currentPageTickets = computed(() => {
+        if (filtersActive.value) {
+            // all unfiltered tickets are in memory → filter in JS, no pagination
+            if (fetchedAll.value) {
+                return Object.values(tickets.value).flat().filter(filterTickets)
+            }
+            return filteredTickets.value[currentFilteredPage.value] || []
+        }
+        return tickets.value[currentPage.value] || []
+    })
+
+    async function fetchTickets() {
+        // everything is already in memory; filtering is done in the computed
+        if (fetchedAll.value && filtersActive.value) return
+
+        // page already cached
+        if (filtersActive.value) {
+            if (filteredTickets.value[currentFilteredPage.value]) return
+        } else {
+            if (tickets.value[currentPage.value]) return
+        }
 
         abortPending()
         abortController = new AbortController()
         const { signal } = abortController
-
-        if (loadMore) {
-            isLoadingMore.value = true
-        } else {
-            isLoading.value = true
-            error.value = null
-        }
+        isLoading.value = true
+        error.value = null
 
         try {
             const data = await adminApi.get(`/tickets${buildQuery()}`, { signal })
 
-            // tickets.value = loadMore ? [...tickets.value, ...data.tickets] : data.tickets
-            
-            tickets.currentPage = data.tickets
-
-            currentPage.value = data.page
-            totalPages.value = data.totalPages
-            total.value = data.total
-            fetched.value = true
-
-            if (!filterStatus.value && !filterCategory.value && 
-                !filterDateFrom.value && !filterDateTo.value
-                && currentPage.value === totalPages.value) {
-                fetchedAll.value = true
+            if (filtersActive.value) {
+                filteredTickets.value = { ...filteredTickets.value, [currentFilteredPage.value]: data.tickets }
+                currentFilteredPage.value = data.page
+                totalFilteredPages.value = data.totalPages
+                totalFiltered.value = data.total
+            } else {
+                tickets.value = { ...tickets.value, [currentPage.value]: data.tickets }
+                currentPage.value = data.page
+                totalPages.value = data.totalPages
+                total.value = data.total
+                fetched.value = true
+                // mark fetchedAll once every unfiltered page is cached
+                if (Object.keys(tickets.value).length === totalPages.value) {
+                    fetchedAll.value = true
+                }
             }
-            
         } catch (err) {
             if (err.name === 'AbortError') return
-            if (!loadMore) error.value = err.message
+            error.value = err.message
         } finally {
             if (signal === abortController?.signal) {
                 isLoading.value = false
-                isLoadingMore.value = false
                 abortController = null
             }
         }
     }
 
+    function goToPage(page) {
+        if (filtersActive.value) {
+            if (page === currentFilteredPage.value) return
+            currentFilteredPage.value = page
+        } else {
+            if (page === currentPage.value) return
+            currentPage.value = page
+        }
+        fetchTickets()
+    }
 
-    const selectedCommercialTickets = ref([])
-    const commercialTicketsFetched = ref(false)
-    const commercialFetchedAll = ref(false)
-    const filteredCommercialTickets = computed(() => selectedCommercialTickets.value.filter(filterTickets))
+    function applyNewFilters() {
+        currentFilteredPage.value = 1
+        totalFilteredPages.value = 1
+        totalFiltered.value = 0
+        filteredTickets.value = {}
+    }
+
+
+    // const selectedCommercialTickets = ref([])
+    // const commercialTicketsFetched = ref(false)
+    // const commercialFetchedAll = ref(false)
+    // const filteredCommercialTickets = computed(() => selectedCommercialTickets.value.filter(filterTickets))
 
     // pagination of a commercial's tickets
-    const commercialCurrentPage = ref(1) // always start from first page
-    const commercialTotalPages = ref(1) // initialy
-    const commercialTotal = ref(0) // initialy
+    // const commercialCurrentPage = ref(1) // always start from first page
+    // const commercialTotalPages = ref(1) // initialy
+    // const commercialTotal = ref(0) // initialy
 
-    const commercialHasMore = computed(() => commercialCurrentPage.value < commercialTotalPages.value)
+    // const commercialHasMore = computed(() => commercialCurrentPage.value < commercialTotalPages.value)
 
     let commercialAbortController = null
-
     function abortPendingCommercial() {
         if (commercialAbortController) {
             commercialAbortController.abort()
@@ -129,7 +202,7 @@ export const useTicketsStore = defineStore('tickets', () => {
         const page = loadMore ? commercialCurrentPage.value + 1 : 1
 
         if (loadMore) {
-            isLoadingMore.value = true
+            // isLoadingMore.value = true
         } else {
             isLoading.value = true
             error.value = null
@@ -167,10 +240,22 @@ export const useTicketsStore = defineStore('tickets', () => {
     }
 
     function clearFilters() {
+        // filters
         filterStatus.value = ''
         filterCategory.value = ''
         filterDateFrom.value = ''
         filterDateTo.value = ''
+        // pagination
+        currentFilteredPage.value = 1
+        totalFilteredPages.value = 1
+        totalFiltered.value = 0
+        // tickets
+        filteredTickets.value = {}
+        // snap to last cached unfiltered page
+        const cachedPages = Object.keys(tickets.value).map(Number)
+        if (cachedPages.length) {
+            currentPage.value = Math.max(...cachedPages)
+        }
     }
 
     function filterTickets(t) {
@@ -182,12 +267,41 @@ export const useTicketsStore = defineStore('tickets', () => {
         return true
     }
 
+    function buildQuery() {
+        const params = new URLSearchParams()
+        if (filterStatus.value) params.set('status', filterStatus.value)
+        if (filterCategory.value) params.set('category', filterCategory.value)
+        if (filterDateFrom.value) params.set('dateFrom', filterDateFrom.value)
+        if (filterDateTo.value) params.set('dateTo', filterDateTo.value)
+        params.set('page', filtersActive.value ? currentFilteredPage.value : currentPage.value)
+        params.set('limit', PAGE_SIZE)
+        return `?${params.toString()}`
+    }
+
     return {
-        tickets, isLoading, isLoadingMore, error, fetched, fetchedAll, commercialTicketsFetched,commercialFetchedAll,
-        filterStatus, filterCategory, filterDateFrom, filterDateTo,
-        currentPage, totalPages, total, hasMore, currentPageTickets,
-        selectedCommercialTickets, filteredCommercialTickets,
-        commercialCurrentPage, commercialTotalPages, commercialTotal, commercialHasMore,
-        fetchTickets, loadCommercialTickets, clearFilters, abortPending, abortPendingCommercial
+        tickets,
+        filteredTickets,
+        isLoading,
+        error,
+        fetched,
+        fetchedAll,
+        filterStatus,
+        filterCategory,
+        filterDateFrom,
+        filterDateTo,
+        filtersActive,
+        currentPage,
+        totalPages,
+        total,
+        currentFilteredPage,
+        totalFilteredPages,
+        totalFiltered,
+        currentPageTickets,
+        fetchTickets,
+        goToPage,
+        applyNewFilters,
+        clearFilters,
+        abortPending,
+        abortPendingCommercial
     }
 })

@@ -3,6 +3,7 @@ import { useTicketsStore } from '@/stores/tickets';
 import { storeToRefs } from 'pinia';
 import { onMounted, computed, watch } from 'vue';
 import { useSorting } from '@/composables/useSorting';
+import { ChevronLeft, ChevronRight } from '@lucide/vue';
 // components
 import TicketsTable from '@/components/tickets/TicketsTable.vue';
 import StatusFilter from '@/components/ui/StatusFilter.vue';
@@ -11,40 +12,60 @@ import CategoryFilter from '@/components/ui/CategoryFilter.vue';
 const store = useTicketsStore()
 
 const { isLoading,
-        isLoadingMore,
-        error, 
-        // tickets,
-        // filteredTickets,
+        error,
         currentPageTickets,
         fetched,
         fetchedAll,
-        hasMore,
-        // total,
         filterStatus,
         filterCategory,
         filterDateFrom,
         filterDateTo,
+        filtersActive,
+        currentPage,
+        totalPages,
+        currentFilteredPage,
+        totalFilteredPages,
         } = storeToRefs(store);
 
-const { fetchTickets, clearFilters } = store
-// const { sortBy, sortDir, toggleSort, sortedItems: sortedTickets } = useSorting(filteredTickets)
+const { fetchTickets, clearFilters, goToPage, applyNewFilters } = store
 const { sortBy, sortDir, toggleSort, sortedItems: sortedTickets } = useSorting(currentPageTickets)
 
-// control clear button appearance
-const hasActiveFilters = computed(() => filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value)
+const pageCount = computed(() => {
+    // when filtered + everything cached, we dump all matches with no pager
+    if (filtersActive.value && fetchedAll.value) return 1
+    return filtersActive.value ? totalFilteredPages.value : totalPages.value
+})
+const activePage = computed(() => filtersActive.value ? currentFilteredPage.value : currentPage.value)
+
+// active is leftmost; last page anchors the right; ellipsis only when there's a gap
+const pageItems = computed(() => {
+    const last = pageCount.value
+    const cur = activePage.value
+    if (last <= 1) return []
+    const items = [cur]
+    if (cur + 1 <= last) items.push(cur + 1)
+    if (cur + 2 < last) items.push('...')
+    if (cur + 1 < last) items.push(last)
+    return items
+})
 
 function onStatusChange(ticket, status) {
     ticket.status = status
 }
 
-// the watcher callback runs before the mounted's
+function goPrev() {
+    if (activePage.value > 1) goToPage(activePage.value - 1)
+}
+function goNext() {
+    if (activePage.value < pageCount.value) goToPage(activePage.value + 1)
+}
+
 let skipNextWatch = false
 onMounted(() => {
     const hadFilters = !!(filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value)
     if (hadFilters) skipNextWatch = true
     clearFilters()
     if (!fetched.value) fetchTickets()
-    console.log("hello")
 })
 
 watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
@@ -52,7 +73,12 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
         skipNextWatch = false
         return
     }
-    if (!fetchedAll.value) fetchTickets()
+    if (filtersActive.value && !fetchedAll.value) {
+        applyNewFilters()
+        fetchTickets()
+    }
+    // if fetchedAll: in-memory filter via computed, no fetch
+    // if filters cleared: clearFilters() already snapped currentPage
 })
 
 </script>
@@ -83,7 +109,7 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
                 <label>To</label>
                 <input type="date" v-model="filterDateTo" />
             </div>
-            <button v-if="hasActiveFilters" class="clear-filters" @click="clearFilters">
+            <button v-if="filtersActive" class="clear-filters" @click="clearFilters">
                 <i class="bi bi-x-circle"></i> Clear
             </button>
         </div>
@@ -95,26 +121,47 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
             <button @click="fetchTickets">Try again</button>
         </div>
 
-        <!-- Empty state -->
-        <!-- <div v-else-if="!isLoading && !filteredTickets.length" class="empty-state">
-            <i class="bi bi-ticket-perforated"></i>
-            <p>No tickets found</p>
-        </div> -->
-
         <!-- Table (handles its own loading skeleton) -->
-        <TicketsTable
-            v-else
-            :tickets="sortedTickets"
-            :loading="isLoading"
-            :loading-more="isLoadingMore"
-            :has-more="hasMore"
-            :sort-by="sortBy"
-            :sort-dir="sortDir"
-            :skeletonRows="7"
-            @status-change="onStatusChange"
-            @sort="toggleSort"
-            @load-more="fetchTickets(true)"
-        />
+        <template v-else>
+            <TicketsTable
+                :tickets="sortedTickets"
+                :loading="isLoading"
+                :sort-by="sortBy"
+                :sort-dir="sortDir"
+                :skeletonRows="7"
+                @status-change="onStatusChange"
+                @sort="toggleSort"
+            />
+
+            <div v-if="pageCount > 1" class="pager">
+                <button
+                    class="page-btn page-arrow"
+                    :disabled="isLoading || activePage === 1"
+                    @click="goPrev"
+                    aria-label="Previous page"
+                >
+                    <ChevronLeft :size="16" />
+                </button>
+                <template v-for="(item, i) in pageItems" :key="i">
+                    <span v-if="item === '...'" class="page-ellipsis">…</span>
+                    <button
+                        v-else
+                        class="page-btn"
+                        :class="{ active: item === activePage }"
+                        :disabled="isLoading"
+                        @click="goToPage(item)"
+                    >{{ item }}</button>
+                </template>
+                <button
+                    class="page-btn page-arrow"
+                    :disabled="isLoading || activePage === pageCount"
+                    @click="goNext"
+                    aria-label="Next page"
+                >
+                    <ChevronRight :size="16" />
+                </button>
+            </div>
+        </template>
     </div>
 </template>
 
@@ -229,6 +276,73 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
             color: var(--danger);
         }
     }
+}
+
+/* ---- Pager ---- */
+.pager {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 18px;
+}
+
+.page-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.page-btn:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.page-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.page-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.page-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-arrow:disabled {
+    opacity: 0.35;
+}
+
+.page-arrow:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 36px;
+    color: var(--text-muted);
+    opacity: 0.5;
+    font-size: 14px;
+    user-select: none;
 }
 
 @media (max-width: 768px) {

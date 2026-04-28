@@ -1,15 +1,16 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { Hotel, BriefcaseBusiness, Coffee } from '@lucide/vue';
 
 defineProps({
     modelValue: { type: String, default: '' },
 })
 
 const categories = [
-    { value: '', label: 'All categories', icon: 'bi bi-grid' },
-    { value: 'restaurant', label: 'Restaurant', icon: 'bi bi-cup-hot' },
-    { value: 'hotel', label: 'Hotel', icon: 'bi bi-building' },
-    { value: 'work', label: 'Work', icon: 'bi bi-briefcase' },
+    { value: '', label: 'All categories' },
+    { value: 'restaurant', label: 'Restaurant' },
+    { value: 'hotel', label: 'Hotel' },
+    { value: 'work', label: 'Work' },
 ]
 
 // sync the selected value with parent filters
@@ -40,8 +41,11 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
         <button class="trigger" @click="isOpen = !isOpen">
             <i :class="categories.find(c => c.value === modelValue)?.icon"></i>
             <span class="label">{{ categories.find(c => c.value === modelValue)?.label }}</span>
-            <i class="bi bi-chevron-down chevron" :class="{ rotated: isOpen }"></i>
+            <!-- <i class="bi bi-chevron-down chevron" :class="{ rotated: isOpen }"></i> -->
+            <ChevronDown :size="64" />
         </button>
+
+        
         <Transition name="dropdown">
             <ul v-if="isOpen" class="dropdown">
                 <li

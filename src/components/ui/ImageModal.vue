@@ -1,4 +1,7 @@
 <script setup>
+
+import { X } from '@lucide/vue';
+
 defineProps({
     open: Boolean,
     loading: Boolean,
@@ -16,7 +19,7 @@ const emit = defineEmits(['close'])
             <div v-if="open" class="modal-overlay" @click.self="emit('close')">
                 <div class="modal-content">
                     <button class="modal-close" @click="emit('close')">
-                        <i class="bi bi-x-lg"></i>
+                        <X />
                     </button>
                     <h3 class="modal-title">{{ title }}</h3>
                     <template v-if="loading">

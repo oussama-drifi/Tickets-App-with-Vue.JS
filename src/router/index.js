@@ -58,13 +58,28 @@ const routes = [
             path: 'categories',
             name: 'categories',
             component: () => import('@/views/pages/cards/CategoriesPage.vue')
-          },
-          {
-            path: 'payments',
-            name: 'payments',
-            component: () => import('@/views/pages/cards/PaymentsPage.vue')
-          },
+          }
         ]
+      },
+      {
+        path: 'payments',
+        name: 'payments',
+        component: () => import('@/views/pages/PaymentsPage.vue')
+      },
+      {
+        path: 'documents',
+        name: 'documents',
+        component: () => import('@/views/pages/DocumentsPage.vue')
+      },
+      {
+        path: 'calendar',
+        name: 'calendar',
+        component: () => import('@/views/pages/CalendarPage.vue')
+      },
+      {
+        path: 'analytics',
+        name: 'analytics',
+        component: () => import('@/views/pages/AnalyticsPage.vue')
       },
       {
         path: 'settings',
