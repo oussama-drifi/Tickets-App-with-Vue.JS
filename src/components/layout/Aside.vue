@@ -1,5 +1,5 @@
 <script setup>
-import { ChevronRight, PanelRightClose, ChevronLeft, ChevronUp, ChevronsUpDown, ChevronDown, ChevronsRight, CalendarDays, AlignEndHorizontal, Sun, DollarSign, Settings, LayoutDashboard, Users, CreditCard, Ticket, Plus, FileText, ChartSpline } from '@lucide/vue';
+import { ChevronRight, PanelRightOpen, ChevronLeft, ChevronUp, ChevronsUpDown, ChevronDown, ChevronsRight, CalendarDays, AlignEndHorizontal, Sun, DollarSign, Settings, LayoutDashboard, Users, CreditCard, Ticket, Plus, FileText, ChartSpline } from '@lucide/vue';
 import { RouterLink, useRouter } from 'vue-router'
 import { ref, computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
@@ -41,11 +41,11 @@ const toggleProfile = () => {
 <aside :class="['sidebar', { collapsed: isCollapsed }]">
     <div class="sidebar-header">
         <div class="logo" @click="isCollapsed && toggleSidebar()">
-            <img src="/logo.png" alt="logo">
+            <img src="/favicon.svg" alt="logo">
             <span>Ticky</span>
         </div>
         <button class="toggle-btn" @click="toggleSidebar()">
-            <PanelRightClose />
+            <PanelRightOpen />
         </button>
     </div>
 
