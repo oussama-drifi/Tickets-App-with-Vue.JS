@@ -15,9 +15,9 @@
   --text-muted: #353535;
   --text-extra-muted: #888888;
   --border: #EEEEEE;
-  --primary-bg-color: rgb(255, 250, 241);
   --primary-bg-color: rgb(255, 242, 216);
   --skeleton-gradient: linear-gradient(90deg, #eee 25%, #ddd 50%, #eee 75%);
+  --danger-background-color: rgb(255, 235, 235);
   --danger: #EF4444;
   --success: #22C55E;
   --active: rgb(255, 247, 233); 
@@ -34,9 +34,9 @@
   --text-extra-muted: #525252;
   --text-extra-muted: #717171;
   --border: #454545;
-  --primary-bg-color: rgb(37, 24, 0);
-  --primary-bg-color: rgb(77, 51, 0);
+  --primary-bg-color: rgb(48, 38, 18);
   --skeleton-gradient: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+  --danger-background-color: rgb(36, 0, 0);
   --danger: #F87171;
   --success: #4ADE80;
   --active: rgb(45, 31, 0);

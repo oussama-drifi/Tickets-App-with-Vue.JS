@@ -1,5 +1,5 @@
 <script setup>
-import { ChevronRight, PanelRightOpen, ChevronLeft, ChevronUp, ChevronsUpDown, ChevronDown, ChevronsRight, CalendarDays, AlignEndHorizontal, Sun, DollarSign, Settings, LayoutDashboard, Users, CreditCard, Ticket, Plus, FileText, ChartSpline } from '@lucide/vue';
+import { SquareArrowRightExit, PanelLeft, Moon, ChevronLeft, ChevronUp, ChevronsUpDown, ChevronDown, ChevronsRight, CalendarDays, AlignEndHorizontal, Sun, DollarSign, Settings, LayoutDashboard, Users, CreditCard, Ticket, Plus, FileText, ChartSpline } from '@lucide/vue';
 import { RouterLink, useRouter } from 'vue-router'
 import { ref, computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
@@ -35,6 +35,11 @@ const toggleProfile = () => {
     showProfile.value = !showProfile.value
 }
 
+const handleLogout = () => {
+    showProfile.value = false
+    auth.logout(router)
+}
+
 </script>
 
 <template>
@@ -42,10 +47,10 @@ const toggleProfile = () => {
     <div class="sidebar-header">
         <div class="logo" @click="isCollapsed && toggleSidebar()">
             <img src="/favicon.svg" alt="logo">
-            <span>Ticky</span>
+            <span v-if="!isCollapsed">Ticky</span>
         </div>
         <button class="toggle-btn" @click="toggleSidebar()">
-            <PanelRightOpen />
+            <PanelLeft />
         </button>
     </div>
 
@@ -120,8 +125,9 @@ const toggleProfile = () => {
         </li>
         <li>
             <button class="nav-link" @click="toggleTheme()" data-tooltip="Theme">
-                <Sun />
-                <span>Theme</span>
+                <Sun v-if="isDark"/>
+                <Moon v-else/>
+                <span style="text-wrap: nowrap;">{{ isDark ? "Light mode" : "Dark mode"}}</span>
             </button>
         </li>
     </ul>
@@ -133,10 +139,11 @@ const toggleProfile = () => {
             </div>
             <div class="info">
                 <span>{{ user.name }}</span>
-                <span>role: {{ role.toLowerCase() }}</span>
+                <!-- <span>role: {{ role.toLowerCase() }}</span> -->
+                <span>{{ auth.user?.email }}</span>
             </div>
-            <div class="btn">
-                <button><ChevronsUpDown /></button>
+            <div class="btn-wrapper" @click="handleLogout">
+                <button><SquareArrowRightExit /></button>
             </div>
         </div>
     </div>
@@ -160,6 +167,7 @@ const toggleProfile = () => {
     flex-direction: column;
 
     .toggle-btn {
+        background-color: transparent;
         width: 30px;
         height: 30px;
         flex-shrink: 0;
@@ -169,8 +177,7 @@ const toggleProfile = () => {
         align-items: center;
         color: var(--text-extra-muted);
         cursor: pointer;
-        border: 1.5px solid var(--border);
-        border-radius: 4px;
+        border: none;
         transition: opacity .25s ease-in-out;
 
         svg {
@@ -212,7 +219,6 @@ const toggleProfile = () => {
 
         li {
             margin-bottom: 3px;
-            /* background-color: red; */
         }
         li:has(.router-link-active) {
             .nav-link {
@@ -268,7 +274,7 @@ const toggleProfile = () => {
             height: 100%;
             left: 17px;
             top: 0;
-            background-color: #eee;
+            background-color: var(--border);
         }
 
         > div {
@@ -281,14 +287,16 @@ const toggleProfile = () => {
         a {
             padding-left: 2em;
             color: var(--text-extra-muted);
+            transition: 0.25s;
 
             &:hover {
-                transform: translateX(2px);
+                color: var(--primary);
             }
         }
     }
 
     .profile-zone {
+        padding: 8px 0;
 
         .profile {
             flex-shrink: 0;
@@ -323,8 +331,8 @@ const toggleProfile = () => {
                 }
             }
     
-            .btn button {
-                background: none;
+            .btn-wrapper button {
+                background: transparent;
                 border: none;
                 cursor: pointer;
                 color: var(--text-extra-muted);
@@ -332,6 +340,13 @@ const toggleProfile = () => {
                 align-items: center;
                 justify-content: center;
                 padding: 4px;
+                transition-duration: 0.25s;
+                border-radius: 5px;
+
+                &:hover {
+                    background-color: var(--danger-background-color);
+                    color: rgb(255, 43, 43);
+                }
             }
         }
 
@@ -359,10 +374,8 @@ const toggleProfile = () => {
         }
 
         .profile-zone {
-            padding: 12px 0;
+            padding: 8px 0;
         }
     }
 }
-
-
 </style>

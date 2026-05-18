@@ -20,8 +20,9 @@ async function request(url, options = {}) {
 
   const response = await fetch(url, { ...options, headers, signal: options.signal })
 
-  if (process.env.ENVIRONEMENT === "developement") {
-    await new Promise(res => setTimeout(res, 1200)) // simulate delay only in dev
+  // simulate delay only in dev mode
+  if (import.meta.env.DEV) {
+    await new Promise(res => setTimeout(res, 1200))
   }
 
   // bad response

@@ -1,16 +1,16 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { Hotel, BriefcaseBusiness, Coffee } from '@lucide/vue';
+import { Hotel, BriefcaseBusiness, Utensils, LayoutGrid, ChevronDown } from '@lucide/vue';    
 
 defineProps({
     modelValue: { type: String, default: '' },
 })
 
 const categories = [
-    { value: '', label: 'All categories' },
-    { value: 'restaurant', label: 'Restaurant' },
-    { value: 'hotel', label: 'Hotel' },
-    { value: 'work', label: 'Work' },
+    { value: '', label: 'All categories', icon: LayoutGrid},
+    { value: 'restaurant', label: 'Restaurant', icon: Utensils },
+    { value: 'hotel', label: 'Hotel', icon: Hotel },
+    { value: 'work', label: 'Work', icon: BriefcaseBusiness},
 ]
 
 // sync the selected value with parent filters
@@ -39,10 +39,10 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 <template>
     <div class="category-filter" ref="wrapperRef">
         <button class="trigger" @click="isOpen = !isOpen">
-            <i :class="categories.find(c => c.value === modelValue)?.icon"></i>
+            <component :is="categories.find(c => c.value === modelValue)?.icon" size="13" />
             <span class="label">{{ categories.find(c => c.value === modelValue)?.label }}</span>
             <!-- <i class="bi bi-chevron-down chevron" :class="{ rotated: isOpen }"></i> -->
-            <ChevronDown :size="64" />
+            <ChevronDown :size="13" :class="{ rotated: isOpen }" />
         </button>
 
         
@@ -55,7 +55,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                     :class="{ active: c.value === modelValue }"
                     @click="select(c.value)"
                 >
-                    <i :class="c.icon" class="option-icon"></i>
+                    <component :is="c.icon" size="13" />
                     <span>{{ c.label }}</span>
                     <i v-if="c.value === modelValue" class="bi bi-check2 check"></i>
                 </li>

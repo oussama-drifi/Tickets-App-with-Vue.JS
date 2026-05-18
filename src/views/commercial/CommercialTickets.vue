@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref, computed, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { X } from '@lucide/vue'
 import { commercialApi } from '@/services/api'
 import TicketCard from '@/components/tickets/TicketCard.vue'
 import ImageModal from '@/components/ui/ImageModal.vue'
@@ -94,7 +95,7 @@ async function openImageModal(ticket) {
 
     try {
         const data = await commercialApi.get(`/tickets/${ticket.id}/image`)
-        modalImage.value = data.imagePath || null
+        modalImage.value = data.imageFullUrl || null
     } catch {
         modalImage.value = null
     } finally {
@@ -138,7 +139,7 @@ onMounted(() => fetchTickets())
                 <input type="date" v-model="filterDateTo" />
             </div>
             <button v-if="hasActiveFilters" class="clear-filters" @click="clearFilters">
-                <i class="bi bi-x-circle"></i> Clear
+                <X size="15"/> Clear
             </button>
         </div>
 

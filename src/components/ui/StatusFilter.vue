@@ -1,4 +1,5 @@
 <script setup>
+import { Activity } from '@lucide/vue';
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 defineProps({
@@ -6,7 +7,7 @@ defineProps({
 });
 
 const statuses = [
-    { value: '', label: 'All statuses' },
+    { value: '', label: 'All statuses'},
     { value: 'pending', label: 'Pending' },
     { value: 'verified', label: 'Verified' },
     { value: 'paid', label: 'Paid' },
@@ -38,7 +39,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
     <div class="status-filter" ref="wrapperRef">
         <button class="trigger" :class="modelValue || 'all'" @click="isOpen = !isOpen">
             <span v-if="modelValue" class="status-dot" :class="modelValue"></span>
-            <span v-else><i class="bi bi-activity"></i></span>
+            <Activity v-else size="13"/>
             <span class="label">{{ statuses.find(s => s.value === modelValue)?.label }}</span>
             <i class="bi bi-chevron-down chevron" :class="{ rotated: isOpen }"></i>
         </button>

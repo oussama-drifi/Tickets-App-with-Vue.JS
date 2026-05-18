@@ -1,4 +1,5 @@
 <script setup>
+import { BriefcaseBusiness, Utensils, Hotel } from '@lucide/vue';
 defineProps({
     ticket: {
         type: Object,
@@ -9,9 +10,9 @@ defineProps({
 const emit = defineEmits(['image-click'])
 
 const categoryIcon = {
-    restaurant: 'bi bi-cup-hot',
-    hotel: 'bi bi-building',
-    work: 'bi bi-briefcase',
+    restaurant: Utensils,
+    hotel: Hotel,
+    work: BriefcaseBusiness,
 }
 
 function formatDate(dateStr) {
@@ -28,7 +29,7 @@ function formatDate(dateStr) {
     <div class="ticket-card">
         <div class="card-header">
             <div class="image-icon" @click="emit('image-click')">
-                <i class="bi bi-image"></i>
+                <img :src="ticket.imageThumbUrl" alt="" width="40px">
             </div>
             <div class="header">
                 <h3>{{ ticket.title }}</h3>
@@ -44,7 +45,7 @@ function formatDate(dateStr) {
             <span><i class="bi bi-currency-dollar"></i> {{ ticket.amount }} DHs</span>
             <div class="badges">
                 <span class="category-badge">
-                    <i :class="categoryIcon[ticket.category]"></i>
+                    <component :is="categoryIcon[ticket.category]" size="13" />
                     {{ ticket.category }}
                 </span>
                 <span class="status-badge" :class="ticket.status">
