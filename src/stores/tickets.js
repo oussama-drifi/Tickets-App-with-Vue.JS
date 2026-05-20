@@ -6,92 +6,54 @@ const PAGE_SIZE = 8
 
 export const useTicketsStore = defineStore('tickets', () => {
     const tickets = ref({})
+    const filteredTickets = ref({})
+    const fetched = ref(false)
+    const fetchedAll = ref(false)
+
+    const selectedCommercialTickets = ref({})
+    const filteredCommercialTickets = ref({})
+    const commercialTicketsFetched = ref(false)
+    const commercialFetchedAll = ref(false)
+
     const isLoading = ref(false)
     const error = ref(null)
-    // const isLoadingMore = ref(false)
-
-    const fetched = ref(false)
-    const fetchedAll = ref(false) // use just filter instead of fetching
 
     // Pagination of all tickets
     const currentPage = ref(1) // always start from first page
     const totalPages = ref(1) // initialy
     const total = ref(0) // initialy
+    // pagination of a commercial's tickets
+    const commercialCurrentPage = ref(1)
+    const commercialTotalPages = ref(1)
+    const commercialTotal = ref(0)
 
     // Pagination of filtered tickets
     const currentFilteredPage = ref(1)
     const totalFilteredPages = ref(1)
     const totalFiltered = ref(0)
 
-    const filteredTickets = ref({})
-
     // Filters
     const filterStatus = ref('')
     const filterCategory = ref('')
     const filterDateFrom = ref('')
-    const filterDateTo = ref('')
+    const filterDateTo= ref('')
 
-
-    // Abort controller
+    
+    // Abort controllers
     let abortController = null
-
+    let commercialAbortController = null
     function abortPending() {
         if (abortController) {
             abortController.abort()
             abortController = null
         }
     }
-
-    // const filteredTickets = computed(() => tickets.value.filter(filterTickets))
-
-    // const currentPageTickets = computed(() => tickets.value[currentPage.value].filter(filterTickets))
-
-    // async function fetchTickets(loadMore = false) {
-
-    //     console.log("fetched")
-
-    //     if (tickets.value[currentPage.value]) return
-
-    //     abortPending()
-    //     abortController = new AbortController()
-    //     const { signal } = abortController
-
-    //     if (loadMore) {
-    //         isLoadingMore.value = true
-    //     } else {
-    //         isLoading.value = true
-    //         error.value = null
-    //     }
-
-    //     try {
-    //         const data = await adminApi.get(`/tickets${buildQuery()}`, { signal })
-
-    //         // tickets.value = loadMore ? [...tickets.value, ...data.tickets] : data.tickets
-            
-    //         tickets.currentPage = data.tickets
-
-    //         currentPage.value = data.page
-    //         totalPages.value = data.totalPages
-    //         total.value = data.total
-    //         fetched.value = true
-
-    //         if (!filterStatus.value && !filterCategory.value && 
-    //             !filterDateFrom.value && !filterDateTo.value
-    //             && currentPage.value === totalPages.value) {
-    //             fetchedAll.value = true
-    //         }
-            
-    //     } catch (err) {
-    //         if (err.name === 'AbortError') return
-    //         if (!loadMore) error.value = err.message
-    //     } finally {
-    //         if (signal === abortController?.signal) {
-    //             isLoading.value = false
-    //             isLoadingMore.value = false
-    //             abortController = null
-    //         }
-    //     }
-    // }
+    function abortPendingCommercial() {
+        if (commercialAbortController) {
+            commercialAbortController.abort()
+            commercialAbortController = null
+        }
+    }
 
     const filtersActive = computed(() =>
         !!(filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value)
@@ -152,45 +114,6 @@ export const useTicketsStore = defineStore('tickets', () => {
                 isLoading.value = false
                 abortController = null
             }
-        }
-    }
-
-    function goToPage(page) {
-        if (filtersActive.value) {
-            if (page === currentFilteredPage.value) return
-            currentFilteredPage.value = page
-        } else {
-            if (page === currentPage.value) return
-            currentPage.value = page
-        }
-        fetchTickets()
-    }
-
-    function applyNewFilters() {
-        currentFilteredPage.value = 1
-        totalFilteredPages.value = 1
-        totalFiltered.value = 0
-        filteredTickets.value = {}
-    }
-
-
-    // const selectedCommercialTickets = ref([])
-    // const commercialTicketsFetched = ref(false)
-    // const commercialFetchedAll = ref(false)
-    // const filteredCommercialTickets = computed(() => selectedCommercialTickets.value.filter(filterTickets))
-
-    // pagination of a commercial's tickets
-    // const commercialCurrentPage = ref(1) // always start from first page
-    // const commercialTotalPages = ref(1) // initialy
-    // const commercialTotal = ref(0) // initialy
-
-    // const commercialHasMore = computed(() => commercialCurrentPage.value < commercialTotalPages.value)
-
-    let commercialAbortController = null
-    function abortPendingCommercial() {
-        if (commercialAbortController) {
-            commercialAbortController.abort()
-            commercialAbortController = null
         }
     }
 
@@ -298,8 +221,6 @@ export const useTicketsStore = defineStore('tickets', () => {
         totalFiltered,
         currentPageTickets,
         fetchTickets,
-        goToPage,
-        applyNewFilters,
         clearFilters,
         abortPending,
         abortPendingCommercial
