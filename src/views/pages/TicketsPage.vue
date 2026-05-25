@@ -1,9 +1,9 @@
 <script setup>
 import { useTicketsStore } from '@/stores/tickets';
 import { storeToRefs } from 'pinia';
-import { onMounted, computed, watch } from 'vue';
+import { onMounted, watch } from 'vue';
 import { useSorting } from '@/composables/useSorting';
-import { ChevronLeft, ChevronRight } from '@lucide/vue';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, X } from '@lucide/vue';
 // components
 import TicketsTable from '@/components/tickets/TicketsTable.vue';
 import StatusFilter from '@/components/ui/StatusFilter.vue';
@@ -21,43 +21,13 @@ const { isLoading,
         filterDateFrom,
         filterDateTo,
         filtersActive,
-        currentPage,
-        totalPages,
-        currentFilteredPage,
-        totalFilteredPages,
         } = storeToRefs(store);
 
-const { fetchTickets, clearFilters, goToPage, applyNewFilters } = store
+const { fetchTickets, clearFilters } = store
 const { sortBy, sortDir, toggleSort, sortedItems: sortedTickets } = useSorting(currentPageTickets)
-
-const pageCount = computed(() => {
-    // when filtered + everything cached, we dump all matches with no pager
-    if (filtersActive.value && fetchedAll.value) return 1
-    return filtersActive.value ? totalFilteredPages.value : totalPages.value
-})
-const activePage = computed(() => filtersActive.value ? currentFilteredPage.value : currentPage.value)
-
-// active is leftmost; last page anchors the right; ellipsis only when there's a gap
-const pageItems = computed(() => {
-    const last = pageCount.value
-    const cur = activePage.value
-    if (last <= 1) return []
-    const items = [cur]
-    if (cur + 1 <= last) items.push(cur + 1)
-    if (cur + 2 < last) items.push('...')
-    if (cur + 1 < last) items.push(last)
-    return items
-})
 
 function onStatusChange(ticket, status) {
     ticket.status = status
-}
-
-function goPrev() {
-    if (activePage.value > 1) goToPage(activePage.value - 1)
-}
-function goNext() {
-    if (activePage.value < pageCount.value) goToPage(activePage.value + 1)
 }
 
 let skipNextWatch = false
@@ -74,7 +44,6 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
         return
     }
     if (filtersActive.value && !fetchedAll.value) {
-        applyNewFilters()
         fetchTickets()
     }
     // if fetchedAll: in-memory filter via computed, no fetch
@@ -92,26 +61,35 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
             </span> -->
         </div>
 
-        <div class="filters">
-            <div class="filter-group">
-                <label>Status</label>
-                <StatusFilter v-model="filterStatus" />
+        <div class="tickets-options">
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Status</label>
+                    <StatusFilter v-model="filterStatus" />
+                </div>
+                <div class="filter-group">
+                    <label>Category</label>
+                    <CategoryFilter v-model="filterCategory" />
+                </div>
+                <div class="filter-group">
+                    <label>From</label>
+                    <input type="date" v-model="filterDateFrom" />
+                </div>
+                <div class="filter-group">
+                    <label>To</label>
+                    <input type="date" v-model="filterDateTo" />
+                </div>
+                <button v-if="filtersActive" class="clear-filters" @click="clearFilters">
+                    <X size="15"/> Clear
+                </button>
             </div>
-            <div class="filter-group">
-                <label>Category</label>
-                <CategoryFilter v-model="filterCategory" />
+            <div class="paginator">
+                <button class="double-previous-btn"><ChevronsLeft /></button>
+                <button class="previous-btn"><ChevronLeft /></button>
+                <span class="page">page: 3 of 7</span>
+                <button class="next-btn"><ChevronRight /></button>
+                <button class="double-next-btn"><ChevronsRight /></button>
             </div>
-            <div class="filter-group">
-                <label>From</label>
-                <input type="date" v-model="filterDateFrom" />
-            </div>
-            <div class="filter-group">
-                <label>To</label>
-                <input type="date" v-model="filterDateTo" />
-            </div>
-            <button v-if="filtersActive" class="clear-filters" @click="clearFilters">
-                <i class="bi bi-x-circle"></i> Clear
-            </button>
         </div>
 
         <!-- Error state -->
@@ -132,35 +110,6 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
                 @status-change="onStatusChange"
                 @sort="toggleSort"
             />
-
-            <div v-if="pageCount > 1" class="pager">
-                <button
-                    class="page-btn page-arrow"
-                    :disabled="isLoading || activePage === 1"
-                    @click="goPrev"
-                    aria-label="Previous page"
-                >
-                    <ChevronLeft :size="16" />
-                </button>
-                <template v-for="(item, i) in pageItems" :key="i">
-                    <span v-if="item === '...'" class="page-ellipsis">…</span>
-                    <button
-                        v-else
-                        class="page-btn"
-                        :class="{ active: item === activePage }"
-                        :disabled="isLoading"
-                        @click="goToPage(item)"
-                    >{{ item }}</button>
-                </template>
-                <button
-                    class="page-btn page-arrow"
-                    :disabled="isLoading || activePage === pageCount"
-                    @click="goNext"
-                    aria-label="Next page"
-                >
-                    <ChevronRight :size="16" />
-                </button>
-            </div>
         </template>
     </div>
 </template>
@@ -217,133 +166,113 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
     }
 }
 
-/* ---- Filters ---- */
-.filters {
+.tickets-options {
+
     display: flex;
-    align-items: flex-end;
-    gap: 14px;
-    margin-bottom: 18px;
-    flex-wrap: wrap;
-    
-    .filter-group {
+    justify-content: space-between;
+    align-items: end;
+    margin-bottom: 10px;
+
+    /* filters */
+    .filters {
         display: flex;
-        flex-direction: column;
-        gap: 4px;
-
-        label {
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-            opacity: 0.6;
+        align-items: flex-end;
+        gap: 10px;
+        flex: 1;
+        padding-right: 5px;
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            min-width: 0;
+    
+            label {
+                font-size: 11px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-muted);
+                opacity: 0.6;
+            }
+    
+            input[type="date"] {
+                padding: 6px 12px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                background: var(--surface);
+                color: var(--text);
+                font-size: 13px;
+                font-family: inherit;
+                min-width: 150px;
+                width: 100%;
+                display: inline-block;
+                transition: border-color 0.15s;
+    
+                &:focus {
+                    outline: none;
+                    border-color: var(--primary);
+                }
+            }
         }
-
-        input[type="date"] {
-            padding: 7px 12px;
+    
+        .clear-filters {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 7px 14px;
             border: 1px solid var(--border);
             border-radius: 8px;
             background: var(--surface);
-            color: var(--text);
+            color: var(--text-muted);
             font-size: 13px;
             font-family: inherit;
-            min-width: 150px;
-            transition: border-color 0.15s;
-
-            &:focus {
-                outline: none;
-                border-color: var(--primary);
+            cursor: pointer;
+            transition: all 0.15s;
+    
+            &:hover {
+                border-color: var(--danger);
+                color: var(--danger);
             }
         }
     }
 
-    .clear-filters {
+    /* paginator */
+    .paginator {
         display: flex;
-        align-items: center;
-        gap: 5px;
-        padding: 7px 14px;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        background: var(--surface);
-        color: var(--text-muted);
-        font-size: 13px;
-        font-family: inherit;
-        cursor: pointer;
-        transition: all 0.15s;
-
-        &:hover {
-            border-color: var(--danger);
-            color: var(--danger);
+        gap: 2px;
+    
+        .page {
+            color: var(--text-muted);
+            margin: 0 3px;
+            background-color: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 0 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 35px;
+        }
+        
+        
+        button {
+            background-color: var(--surface);
+            border: none;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+            height: 35px;
+            width: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
         }
     }
 }
 
-/* ---- Pager ---- */
-.pager {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 18px;
-}
-
-.page-btn {
-    min-width: 36px;
-    height: 36px;
-    padding: 0 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface);
-    color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 500;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.15s;
-}
-
-.page-btn:hover:not(:disabled) {
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
-.page-btn.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #fff;
-}
-
-.page-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-}
-
-.page-arrow {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.page-arrow:disabled {
-    opacity: 0.35;
-}
-
-.page-arrow:hover:not(:disabled) {
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
-.page-ellipsis {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 24px;
-    height: 36px;
-    color: var(--text-muted);
-    opacity: 0.5;
-    font-size: 14px;
-    user-select: none;
-}
 
 @media (max-width: 768px) {
     .tickets-page {

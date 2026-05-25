@@ -67,6 +67,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 <style scoped>
 .category-filter {
     position: relative;
+    width: 100%;
 }
 
 .trigger {
@@ -84,15 +85,18 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
     font-family: inherit;
     white-space: nowrap;
     transition: border-color 0.15s;
+    width: 100%;
+}
+
+.trigger .label {
+    flex: 1;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .trigger:hover {
     border-color: var(--primary);
-}
-
-.trigger > i:first-child {
-    font-size: 14px;
-    color: var(--text-muted);
 }
 
 .chevron {
@@ -112,6 +116,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
     top: calc(100% + 4px);
     left: 0;
     min-width: 180px;
+    max-width: 300px;
     list-style: none;
     padding: 5px;
     border-radius: 10px;

@@ -1,5 +1,5 @@
 <script setup>
-import { Activity } from '@lucide/vue';
+import { Activity, ListMinus, ChevronDown } from '@lucide/vue';
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 defineProps({
@@ -41,7 +41,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
             <span v-if="modelValue" class="status-dot" :class="modelValue"></span>
             <Activity v-else size="13"/>
             <span class="label">{{ statuses.find(s => s.value === modelValue)?.label }}</span>
-            <i class="bi bi-chevron-down chevron" :class="{ rotated: isOpen }"></i>
+            <ChevronDown :size="13" :class="{ rotated: isOpen }" />
         </button>
         <Transition name="dropdown">
             <ul v-if="isOpen" class="dropdown">
@@ -53,7 +53,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
                     @click="select(s.value)"
                 >
                     <span v-if="s.value" class="status-dot" :class="s.value"></span>
-                    <span v-else class="all-icon"><i class="bi bi-collection"></i></span>
+                    <span v-else class="all-icon"><ListMinus size="15"/></span>
                     <span>{{ s.label }}</span>
                     <i v-if="s.value === modelValue" class="bi bi-check2 check"></i>
                 </li>
@@ -65,6 +65,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 <style scoped>
 .status-filter {
     position: relative;
+    width: 100%;
 }
 
 .trigger {
@@ -82,6 +83,14 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
     font-family: inherit;
     white-space: nowrap;
     transition: border-color 0.15s;
+    width: 100%;
+
+    .label {
+        flex: 1;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
     &:hover {
         border-color: var(--primary);

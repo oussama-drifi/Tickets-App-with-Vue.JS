@@ -1,7 +1,7 @@
 <script setup>
-import { SquareArrowRightExit, PanelLeft, Moon, ChevronLeft, ChevronUp, ChevronsUpDown, ChevronDown, ChevronsRight, CalendarDays, AlignEndHorizontal, Sun, DollarSign, Settings, LayoutDashboard, Users, CreditCard, Ticket, Plus, FileText, ChartSpline } from '@lucide/vue';
+import { SquareArrowRightExit, PanelLeft, Moon, Headset, ChartLine, ChevronLeft, ChevronUp, ChevronsUpDown, ChevronDown, ChevronsRight, CalendarDays, AlignEndHorizontal, Sun, DollarSign, Settings, LayoutDashboard, Users, CreditCard, Ticket, Plus, FileText, ChartSpline } from '@lucide/vue';
 import { RouterLink, useRouter } from 'vue-router'
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 const auth = useAuthStore()
 const router = useRouter()
@@ -27,14 +27,11 @@ function toggleSubMenu() {
     isCollapsed.value = false
 }
 // profile
-const { role, user } = auth
+const { user } = auth
 const showProfile = ref(false)
-const profileCardRef = ref(null)
-const profileBtnRef = ref(null)
 const toggleProfile = () => {
     showProfile.value = !showProfile.value
 }
-
 const handleLogout = () => {
     showProfile.value = false
     auth.logout(router)
@@ -96,6 +93,7 @@ const handleLogout = () => {
         <li>
             <RouterLink :to="{ name: 'analytics' }" class="nav-link" data-tooltip="Analytics">
                 <AlignEndHorizontal />
+                <!-- <ChartLine /> -->
                 <span>Analytics</span>
             </RouterLink>
         </li>
@@ -115,6 +113,12 @@ const handleLogout = () => {
             <RouterLink :to="{ name: 'calendar' }" class="nav-link" data-tooltip="Schedule">
                 <CalendarDays />
                 <span>Schedule</span>
+            </RouterLink>
+        </li>
+        <li>
+            <RouterLink :to="{ name: 'settings'}" class="nav-link" data-tooltip="Settings">
+                <Headset />
+                <span>Support</span>
             </RouterLink>
         </li>
         <li>

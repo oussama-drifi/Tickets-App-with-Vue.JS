@@ -56,13 +56,12 @@ export const useTicketsStore = defineStore('tickets', () => {
     }
 
     const filtersActive = computed(() =>
-        !!(filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value)
+        filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value
     )
 
     const currentPageTickets = computed(() => {
         if (filtersActive.value) {
-            // all unfiltered tickets are in memory → filter in JS, no pagination
-            if (fetchedAll.value) {
+            if (fetchedAll.value) { // all unfiltered tickets are in memory
                 return Object.values(tickets.value).flat().filter(filterTickets)
             }
             return filteredTickets.value[currentFilteredPage.value] || []
@@ -71,15 +70,15 @@ export const useTicketsStore = defineStore('tickets', () => {
     })
 
     async function fetchTickets() {
-        // everything is already in memory; filtering is done in the computed
-        if (fetchedAll.value && filtersActive.value) return
+        // // everything is already in memory; filtering is done in the computed
+        // if (fetchedAll.value && filtersActive.value) return
 
-        // page already cached
-        if (filtersActive.value) {
-            if (filteredTickets.value[currentFilteredPage.value]) return
-        } else {
-            if (tickets.value[currentPage.value]) return
-        }
+        // // page already cached
+        // if (filtersActive.value) {
+        //     if (filteredTickets.value[currentFilteredPage.value]) return
+        // } else {
+        //     if (tickets.value[currentPage.value]) return
+        // }
 
         abortPending()
         abortController = new AbortController()
@@ -91,15 +90,15 @@ export const useTicketsStore = defineStore('tickets', () => {
             const data = await adminApi.get(`/tickets${buildQuery()}`, { signal })
 
             if (filtersActive.value) {
-                filteredTickets.value = { ...filteredTickets.value, [currentFilteredPage.value]: data.tickets }
                 currentFilteredPage.value = data.page
                 totalFilteredPages.value = data.totalPages
                 totalFiltered.value = data.total
+                filteredTickets.value = { ...filteredTickets.value, [currentFilteredPage.value]: data.tickets }
             } else {
-                tickets.value = { ...tickets.value, [currentPage.value]: data.tickets }
                 currentPage.value = data.page
                 totalPages.value = data.totalPages
                 total.value = data.total
+                tickets.value = { ...tickets.value, [currentPage.value]: data.tickets }
                 fetched.value = true
                 // mark fetchedAll once every unfiltered page is cached
                 if (Object.keys(tickets.value).length === totalPages.value) {

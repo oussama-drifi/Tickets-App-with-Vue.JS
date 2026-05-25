@@ -3,33 +3,29 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { adminApi } from '@/services/api';
 import ImageModal from '@/components/ui/ImageModal.vue';
 import { formatDate } from '@/utils';
-import { ChevronDown, Image } from '@lucide/vue';
+import { Utensils, Image, Hotel, BriefcaseBusiness, ArrowDownWideNarrow, ArrowUpNarrowWide, ChevronDown} from '@lucide/vue';
 
 const props = defineProps({
     tickets: { type: Array, required: true },
     loading: { type: Boolean, default: false },
-    // loadingMore: { type: Boolean, default: false },
-    // hasMore: { type: Boolean, default: false },
     skeletonRows: { type: Number, default: 5 },
     sortBy: { type: String, default: null },
     sortDir: { type: String, default: 'asc'},
     api: { type: Object, default: () => adminApi },
     readonly: { type: Boolean, default: false }
 })
-
+// icons logic
 const categoryIcon = {
-    restaurant: 'bi bi-cup-hot',
-    hotel: 'bi bi-building',
-    work: 'bi bi-briefcase',
+    restaurant: Utensils,
+    hotel: Hotel,
+    work: BriefcaseBusiness,
 }
-const statuses = ['pending', 'verified', 'rejected']
-
-const emit = defineEmits(['status-change', 'sort', 'load-more']);
-
 function sortIcon(field) {
-    if (props.sortBy !== field) return 'bi-arrow-down-up'
-    return props.sortDir === 'asc' ? 'bi-sort-up' : 'bi-sort-down'
+    return props.sortBy !== field || props.sortDir === 'asc' ? ArrowUpNarrowWide : ArrowDownWideNarrow
 }
+
+const statuses = ['pending', 'verified', 'rejected']
+const emit = defineEmits(['status-change', 'sort', 'load-more']);
 
 const openDropdown = ref(null)
 const dropdownPos = ref({ top: 0, left: 0 })
@@ -40,11 +36,9 @@ function closeDropdowns(e) {
         openDropdown.value = null
     }
 }
-
 function onScroll() {
     openDropdown.value = null
 }
-
 // Column resize state
 const resizing = ref(null)
 const columnWidths = ref({
@@ -56,7 +50,6 @@ const columnWidths = ref({
     category: 130,
     status: 150,
 })
-
 function onResizeStart(col, e) {
     e.preventDefault()
     const startX = e.clientX
@@ -119,13 +112,12 @@ async function selectStatus(ticket, status) {
     }
 }
 
-// Image modal state
+// Image modal
 const modalOpen = ref(false)
 const modalLoading = ref(false)
 const modalImage = ref(null)
 const modalDescription = ref('')
 const modalTitle = ref('')
-
 async function openImageModal(ticket) {
     modalOpen.value = true
     modalLoading.value = true
@@ -135,14 +127,13 @@ async function openImageModal(ticket) {
 
     try {
         const data = await props.api.get(`/tickets/${ticket.id}/image`)
-        modalImage.value = data.imagePath || null
+        modalImage.value = data.imageFullUrl || null
     } catch {
         modalImage.value = null
     } finally {
         modalLoading.value = false
     }
 }
-
 function closeModal() {
     modalOpen.value = false
 }
@@ -193,8 +184,8 @@ onUnmounted(() => {
                 <tr>
                     <th :style="colStyle('image')">Image<span class="resize-handle" @mousedown="onResizeStart('image', $event)"></span></th>
                     <th :style="colStyle('title')">Title<span class="resize-handle" @mousedown="onResizeStart('title', $event)"></span></th>
-                    <th :style="colStyle('amount')" class="sortable" @click="emit('sort', 'amount')"><i :class="['bi sort-icon', sortIcon('amount'), { active: sortBy === 'amount' }]"></i>Amount<span class="resize-handle" @mousedown.stop="onResizeStart('amount', $event)"></span></th>
-                    <th :style="colStyle('date')" class="sortable" @click="emit('sort', 'date')"><i :class="['bi sort-icon', sortIcon('date'), { active: sortBy === 'date' }]"></i>Date<span class="resize-handle" @mousedown.stop="onResizeStart('date', $event)"></span></th>
+                    <th :style="colStyle('amount')" class="sortable" @click="emit('sort', 'amount')"><component size="17" :is="sortIcon('amount')" :class="['bi sort-icon', { active: sortBy === 'amount' }]" />Amount<span class="resize-handle" @mousedown.stop="onResizeStart('amount', $event)"></span></th>
+                    <th :style="colStyle('date')" class="sortable" @click="emit('sort', 'date')"><component size="17" :is="sortIcon('date')" :class="['bi sort-icon', { active: sortBy === 'date' }]" />Date<span class="resize-handle" @mousedown.stop="onResizeStart('date', $event)"></span></th>
                     <th :style="colStyle('publisher')">Publisher<span class="resize-handle" @mousedown="onResizeStart('publisher', $event)"></span></th>
                     <th :style="colStyle('category')">Category<span class="resize-handle" @mousedown="onResizeStart('category', $event)"></span></th>
                     <th :style="colStyle('status')">Status<span class="resize-handle" @mousedown="onResizeStart('status', $event)"></span></th>
@@ -205,6 +196,7 @@ onUnmounted(() => {
                     <td>
                         <div class="ticket-image clickable" @click="openImageModal(ticket)">
                             <Image />
+                            <!-- <img :src="ticket.imageThumbUrl"" alt="" width="40px"> -->
                         </div>
                     </td>
                     <td>
@@ -221,42 +213,21 @@ onUnmounted(() => {
                     </td>
                     <td>
                         <span class="ticket-category">
-                            <i :class="categoryIcon[ticket.category]"></i> {{ ticket.category }}
+                            <component :is="categoryIcon[ticket.category]" size="15" style="margin-bottom: -2px;" /> {{ ticket.category }}
                         </span>
                     </td>
                     <td>
-                        <div v-if="!readonly" class="status-select" :class="{ open: openDropdown === ticket.id }">
+                        <div class="status-select" :class="{ open: openDropdown === ticket.id }">
                             <button class="status-trigger" :class="ticket.status" @click="toggleDropdown(ticket.id, $event)">
                                 <span class="status-dot"></span>
                                 {{ ticket.status }}
-                                <i class="bi bi-chevron-down chevron"></i>
+                                <ChevronDown size="15"/>
                             </button>
                         </div>
-                        <span v-else class="status-badge" :class="ticket.status">
-                            <span class="status-dot"></span>
-                            {{ ticket.status }}
-                        </span>
                     </td>
-                </tr>
-                <!-- Loading more skeleton rows -->
-                <tr v-if="loadingMore" v-for="i in skeletonRows" :key="'more-' + i" class="skeleton-row">
-                    <td><div class="skeleton skeleton-icon"></div></td>
-                    <td><div class="skeleton skeleton-text"></div></td>
-                    <td><div class="skeleton skeleton-short"></div></td>
-                    <td><div class="skeleton skeleton-medium"></div></td>
-                    <td><div class="skeleton skeleton-text"></div></td>
-                    <td><div class="skeleton skeleton-short"></div></td>
-                    <td><div class="skeleton skeleton-badge"></div></td>
                 </tr>
             </tbody>
         </table>
-        <!-- Show More button -->
-        <!-- <div v-if="hasMore && !loadingMore" class="show-more-wrapper">
-            <button class="show-more-btn" @click="emit('load-more')">
-                <i class="bi bi-arrow-down-circle"></i> Show More
-            </button>
-        </div> -->
-
         
     </div>
 
@@ -535,30 +506,6 @@ onUnmounted(() => {
 [data-theme="dark"] .paid.status-trigger { color: #86EFAC; border-color: #14532D; background: rgba(34, 197, 94, 0.1); }
 [data-theme="dark"] .rejected.status-trigger { color: #FCA5A5; border-color: #7F1D1D; background: rgba(239, 68, 68, 0.1); }
 
-/* Read-only status badge */
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 6px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    font-size: 13px;
-    font-weight: 500;
-    text-transform: capitalize;
-    white-space: nowrap;
-}
-
-.pending.status-badge { color: #B45309; border-color: #FDE68A; background: #FFFBEB; }
-.verified.status-badge { color: #1D4ED8; border-color: #BFDBFE; background: #EFF6FF; }
-.paid.status-badge { color: #15803D; border-color: #BBF7D0; background: #F0FDF4; }
-.rejected.status-badge { color: #B91C1C; border-color: #FECACA; background: #FEF2F2; }
-
-[data-theme="dark"] .pending.status-badge { color: #FCD34D; border-color: #78350F; background: rgba(245, 158, 11, 0.1); }
-[data-theme="dark"] .verified.status-badge { color: #93C5FD; border-color: #1E3A5F; background: rgba(59, 130, 246, 0.1); }
-[data-theme="dark"] .paid.status-badge { color: #86EFAC; border-color: #14532D; background: rgba(34, 197, 94, 0.1); }
-[data-theme="dark"] .rejected.status-badge { color: #FCA5A5; border-color: #7F1D1D; background: rgba(239, 68, 68, 0.1); }
-
 /* ---- Skeleton ---- */
 .skeleton {
     border-radius: 6px;
@@ -580,34 +527,6 @@ onUnmounted(() => {
 
 .skeleton-row td {
     border-top: 1px solid var(--border);
-}
-
-/* ---- Show More ---- */
-.show-more-wrapper {
-    display: flex;
-    justify-content: center;
-    padding: 16px;
-}
-
-.show-more-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 24px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface);
-    color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.15s;
-}
-
-.show-more-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
 }
 
 /* ---- Responsive ---- */
