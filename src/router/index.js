@@ -82,6 +82,11 @@ const routes = [
         component: () => import('@/views/pages/AnalyticsPage.vue')
       },
       {
+        path: 'support',
+        name: 'support',
+        component: () => import('@/views/pages/SupportPage.vue')
+      },
+      {
         path: 'settings',
         name: 'settings',
         component: () => import('@/views/pages/SettingsPage.vue')

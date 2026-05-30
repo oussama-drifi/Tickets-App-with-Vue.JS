@@ -116,7 +116,7 @@ const handleLogout = () => {
             </RouterLink>
         </li>
         <li>
-            <RouterLink :to="{ name: 'settings'}" class="nav-link" data-tooltip="Settings">
+            <RouterLink :to="{ name: 'support'}" class="nav-link" data-tooltip="Support">
                 <Headset />
                 <span>Support</span>
             </RouterLink>
