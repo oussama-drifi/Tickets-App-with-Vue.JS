@@ -1,5 +1,5 @@
 <script setup>
-import { SquareArrowRightExit, PanelLeft, Moon, Headset, ChartLine, ChevronLeft, ChevronUp, ChevronsUpDown, ChevronDown, ChevronsRight, CalendarDays, AlignEndHorizontal, Sun, DollarSign, Settings, LayoutDashboard, Users, CreditCard, Ticket, Plus, FileText, ChartSpline } from '@lucide/vue';
+import { SquareArrowRightExit, PanelLeft, Moon, Headset, ChevronDown, CalendarDays, AlignEndHorizontal, Sun, DollarSign, Settings, LayoutDashboard, Users, CreditCard, Ticket, Plus, FileText } from '@lucide/vue';
 import { RouterLink, useRouter } from 'vue-router'
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
@@ -72,9 +72,13 @@ const handleLogout = () => {
             </button>
             <ul :class="['sub-menu', { shown: isSubMenuShown }]">
                 <div>
-                    <li><a href="#">Ticket</a></li>
-                    <li><a href="#">Commercial</a></li>
-                    <li><a href="#">Card</a></li>
+                    <li><a href="">Ticket</a></li>
+                    <li><a href="">Commercial</a></li>
+                    <li><a href="">Card</a></li>
+                    <!-- to be replaced later with -->
+                    <!-- <li><RouterLink :to="{ name: '' }">Ticket</RouterLink></li>
+                    <li><RouterLink :to="{ name: '' }">Commercial</RouterLink></li>
+                    <li><RouterLink :to="{ name: '' }">Card</RouterLink></li> -->
                 </div>
             </ul>
         </li>
@@ -93,7 +97,6 @@ const handleLogout = () => {
         <li>
             <RouterLink :to="{ name: 'analytics' }" class="nav-link" data-tooltip="Analytics">
                 <AlignEndHorizontal />
-                <!-- <ChartLine /> -->
                 <span>Analytics</span>
             </RouterLink>
         </li>
@@ -112,7 +115,7 @@ const handleLogout = () => {
         <li>
             <RouterLink :to="{ name: 'calendar' }" class="nav-link" data-tooltip="Schedule">
                 <CalendarDays />
-                <span>Schedule</span>
+                <span>Calendar</span>
             </RouterLink>
         </li>
         <li>
@@ -143,7 +146,6 @@ const handleLogout = () => {
             </div>
             <div class="info">
                 <span>{{ user.name }}</span>
-                <!-- <span>role: {{ role.toLowerCase() }}</span> -->
                 <span>{{ auth.user?.email }}</span>
             </div>
             <div class="btn-wrapper" @click="handleLogout">
@@ -271,15 +273,6 @@ const handleLogout = () => {
         grid-template-rows: 0fr;
         transition: 0.3s ease-in-out;
         position: relative;
-        &::before {
-            position: absolute;
-            content: "";
-            width: 2px;
-            height: 100%;
-            left: 17px;
-            top: 0;
-            background-color: var(--border);
-        }
 
         > div {
             overflow: hidden;
