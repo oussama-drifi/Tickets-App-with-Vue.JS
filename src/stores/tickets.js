@@ -52,6 +52,12 @@ export const useTicketsStore = defineStore('tickets', () => {
         if (commercialAbortController) { commercialAbortController.abort(); commercialAbortController = null }
     }
 
+    const currentCommercialPageTickets = computed(() =>
+        selectedCommercialTickets.value[commercialCurrentPage.value] || []
+    )
+
+    const commercialHasMore = computed(() => commercialCurrentPage.value < commercialTotalPages.value)
+
     const filtersActive = computed(() =>
         filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value
     )
@@ -259,6 +265,8 @@ export const useTicketsStore = defineStore('tickets', () => {
         commercialCurrentPage,
         commercialTotalPages,
         commercialTotal,
+        currentCommercialPageTickets,
+        commercialHasMore,
         fetchTickets,
         goToPage,
         loadCommercialTickets,

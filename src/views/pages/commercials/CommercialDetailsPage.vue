@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useCommercialsStore } from '@/stores/commercials'
@@ -18,9 +18,9 @@ const ticketsStore = useTicketsStore()
 const {
     isLoading,
     isLoadingMore,
-    filteredCommercialTickets,
-    commercialFetchedAll,
+    currentCommercialPageTickets,
     commercialHasMore,
+    commercialFetchedAll,
     filterStatus,
     filterCategory,
     filterDateFrom,
@@ -28,7 +28,7 @@ const {
     } = storeToRefs(ticketsStore)
 const { loadCommercialTickets, clearFilters } = ticketsStore;
 
-const { sortBy, sortDir, toggleSort, sortedItems: sortedCommercialTickets } = useSorting(filteredCommercialTickets)
+const { sortBy, sortDir, toggleSort, sortedItems: sortedCommercialTickets } = useSorting(currentCommercialPageTickets)
 const { selectedCommercial, isSelectedCommercialLoading, selectedCommercialNotFoundError } = storeToRefs(commercialsStore)
 const { fetchCommercial } = commercialsStore
 
@@ -46,8 +46,6 @@ const hasActiveFilters = computed(() => filterStatus.value || filterCategory.val
 function onStatusChange(ticket, status) {
     ticket.status = status
 }
-
-onMounted(() => clearFilters())
 
 watch(selectedId, (id) => {
     if (!id) return
