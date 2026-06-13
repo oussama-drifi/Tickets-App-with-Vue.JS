@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from '@lucide/vue'
 import { useCommercialsStore } from '@/stores/commercials'
 import { useTicketsStore } from '@/stores/tickets'
 import TicketsTable from '@/components/tickets/TicketsTable.vue'
@@ -17,16 +18,15 @@ const ticketsStore = useTicketsStore()
 
 const {
     isLoading,
-    isLoadingMore,
     currentCommercialPageTickets,
-    commercialHasMore,
-    commercialFetchedAll,
+    commercialCurrentPage,
+    commercialTotalPages,
     filterStatus,
     filterCategory,
     filterDateFrom,
     filterDateTo
     } = storeToRefs(ticketsStore)
-const { loadCommercialTickets, clearFilters } = ticketsStore;
+const { loadCommercialTickets, goToCommercialPage } = ticketsStore;
 
 const { sortBy, sortDir, toggleSort, sortedItems: sortedCommercialTickets } = useSorting(currentCommercialPageTickets)
 const { selectedCommercial, isSelectedCommercialLoading, selectedCommercialNotFoundError } = storeToRefs(commercialsStore)
@@ -43,6 +43,14 @@ const selectedId = computed(() => route.params.id ? Number(route.params.id) : nu
 
 const hasActiveFilters = computed(() => filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value)
 
+function clearCommercialFilters() {
+    ticketsStore.filterStatus = ''
+    ticketsStore.filterCategory = ''
+    ticketsStore.filterDateFrom = ''
+    ticketsStore.filterDateTo = ''
+    // watcher will fire and re-fetch page 1 unfiltered
+}
+
 function onStatusChange(ticket, status) {
     ticket.status = status
 }
@@ -54,7 +62,11 @@ watch(selectedId, (id) => {
 }, { immediate: true })
 
 watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
-    if (selectedId.value && !commercialFetchedAll.value) loadCommercialTickets(selectedId.value)
+    if (!selectedId.value) return
+    // wipe cache so the new filter fetch isn't skipped as "already cached"
+    ticketsStore.selectedCommercialTickets = {}
+    ticketsStore.commercialCurrentPage = 1
+    loadCommercialTickets(selectedId.value, 1)
 })
 
 </script>
@@ -97,38 +109,44 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
 
         <div class="tickets-section">
             <h4>Tickets</h4>
-            <div class="filters">
-                <div class="filter-group">
-                    <label>Status</label>
-                    <StatusFilter v-model="filterStatus" />
+            <div class="tickets-options">
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Status</label>
+                        <StatusFilter v-model="filterStatus" />
+                    </div>
+                    <div class="filter-group">
+                        <label>Category</label>
+                        <CategoryFilter v-model="filterCategory" />
+                    </div>
+                    <div class="filter-group">
+                        <label>From</label>
+                        <input type="date" v-model="filterDateFrom" />
+                    </div>
+                    <div class="filter-group">
+                        <label>To</label>
+                        <input type="date" v-model="filterDateTo" />
+                    </div>
+                    <button v-if="hasActiveFilters" class="clear-filters" @click="clearCommercialFilters">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </button>
                 </div>
-                <div class="filter-group">
-                    <label>Category</label>
-                    <CategoryFilter v-model="filterCategory" />
+                <div class="paginator">
+                    <button :disabled="commercialCurrentPage <= 1" @click="goToCommercialPage(1)"><ChevronsLeft /></button>
+                    <button :disabled="commercialCurrentPage <= 1" @click="goToCommercialPage(commercialCurrentPage - 1)"><ChevronLeft /></button>
+                    <span class="page">{{ commercialCurrentPage }} of {{ commercialTotalPages }}</span>
+                    <button :disabled="commercialCurrentPage >= commercialTotalPages" @click="goToCommercialPage(commercialCurrentPage + 1)"><ChevronRight /></button>
+                    <button :disabled="commercialCurrentPage >= commercialTotalPages" @click="goToCommercialPage(commercialTotalPages)"><ChevronsRight /></button>
                 </div>
-                <div class="filter-group">
-                    <label>From</label>
-                    <input type="date" v-model="filterDateFrom" />
-                </div>
-                <div class="filter-group">
-                    <label>To</label>
-                    <input type="date" v-model="filterDateTo" />
-                </div>
-                <button v-if="hasActiveFilters" class="clear-filters" @click="ticketsStore.clearFilters()">
-                    <i class="bi bi-x-circle"></i> Clear
-                </button>
             </div>
             <TicketsTable
                 v-if="sortedCommercialTickets.length || isLoading"
                 :tickets="sortedCommercialTickets"
                 :loading="isLoading"
-                :loading-more="isLoadingMore"
-                :has-more="commercialHasMore"
                 :sort-by="sortBy"
                 :sort-dir="sortDir"
                 @status-change="onStatusChange"
                 @sort="toggleSort"
-                @load-more="loadCommercialTickets(selectedId, true)"
             />
             <p v-else class="no-tickets">
                 <i class="bi bi-ticket"></i>
@@ -278,19 +296,27 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
     font-size: 14px;
 }
 
-/* ---- Filters ---- */
+/* ---- Filters + Paginator ---- */
+.tickets-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 14px;
+}
+
 .filters {
     display: flex;
     align-items: flex-end;
     gap: 14px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
+    flex: 1;
 }
 
 .filter-group {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    flex: 1;
+    min-width: 0;
 }
 
 .filter-group label {
@@ -310,7 +336,8 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
     color: var(--text);
     font-size: 13px;
     font-family: inherit;
-    min-width: 150px;
+    width: 100%;
+    min-width: 0;
     transition: border-color 0.15s;
 }
 
@@ -337,6 +364,44 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
 .clear-filters:hover {
     border-color: var(--danger);
     color: var(--danger);
+}
+
+.paginator {
+    display: flex;
+    gap: 2px;
+    margin-left: 14px;
+}
+
+.paginator .page {
+    color: var(--text-muted);
+    margin: 0 3px;
+    background-color: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 0 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 35px;
+    white-space: nowrap;
+}
+
+.paginator button {
+    background-color: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    height: 35px;
+    width: 35px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.paginator button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
 }
 .not-found i {
     color: var(--danger);

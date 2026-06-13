@@ -145,7 +145,7 @@ export const useTicketsStore = defineStore('tickets', () => {
         await fetchTickets()
     }
 
-    async function loadCommercialTickets(commercialId, loadMore = false) {
+    async function loadCommercialTickets(commercialId, page = 1) {
         // reset cache if switching commercial
         if (commercialId !== selectedCommercialId.value) {
             selectedCommercialTickets.value = {}
@@ -158,46 +158,44 @@ export const useTicketsStore = defineStore('tickets', () => {
             selectedCommercialId.value = commercialId
         }
 
+        // already cached
+        if (selectedCommercialTickets.value[page]) {
+            commercialCurrentPage.value = page
+            return
+        }
+
         abortPendingCommercial()
         commercialAbortController = new AbortController()
         const { signal } = commercialAbortController
 
-        const page = loadMore ? commercialCurrentPage.value + 1 : 1
-
-        if (loadMore) {
-            isLoadingMore.value = true
-        } else {
-            isLoading.value = true
-            error.value = null
-        }
+        isLoading.value = true
+        error.value = null
 
         try {
             const data = await adminApi.get(`/commercials/${commercialId}/tickets${buildQuery(page)}`, { signal })
-            if (loadMore) {
-                selectedCommercialTickets.value = [...(selectedCommercialTickets.value[commercialCurrentPage.value] || []), ...data.tickets]
-            } else {
-                selectedCommercialTickets.value = { ...selectedCommercialTickets.value, [data.page]: data.tickets }
-            }
+            selectedCommercialTickets.value = { ...selectedCommercialTickets.value, [data.page]: data.tickets }
             commercialCurrentPage.value = data.page
             commercialTotalPages.value = data.totalPages
             commercialTotal.value = data.total
             commercialTicketsFetched.value = true
-            if (!filtersActive.value && data.page === data.totalPages) {
+            if (!filtersActive.value && Object.keys(selectedCommercialTickets.value).length === data.totalPages) {
                 commercialFetchedAll.value = true
             }
         } catch (err) {
             if (err.name === 'AbortError') return
-            if (!loadMore) {
-                error.value = err.message
-                selectedCommercialTickets.value = {}
-            }
+            error.value = err.message
+            selectedCommercialTickets.value = {}
         } finally {
             if (signal === commercialAbortController?.signal) {
                 isLoading.value = false
-                isLoadingMore.value = false
                 commercialAbortController = null
             }
         }
+    }
+
+    async function goToCommercialPage(page) {
+        const target = Math.max(1, Math.min(page, commercialTotalPages.value))
+        await loadCommercialTickets(selectedCommercialId.value, target)
     }
 
     function clearFilters() {
@@ -269,6 +267,7 @@ export const useTicketsStore = defineStore('tickets', () => {
         commercialHasMore,
         fetchTickets,
         goToPage,
+        goToCommercialPage,
         loadCommercialTickets,
         clearFilters,
         abortPending,
