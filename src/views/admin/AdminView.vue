@@ -1,12 +1,10 @@
 <script setup>
-import SideBar from '@/components/layout/SideBar.vue';
 import Main from '@/components/layout/Main.vue';
 import Aside from '@/components/layout/Aside.vue';
 </script>
 
 <template>
     <div class="main-container">
-        <!-- <SideBar /> -->
         <Aside />
         <Main />
     </div>
