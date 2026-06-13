@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useTicketsStore } from '@/stores/tickets'
 
 const routes = [
   {
@@ -124,12 +125,18 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach(async (to) => {
+router.beforeEach(async (to, from) => {
   const authStore = useAuthStore()
+  const ticketsStore = useTicketsStore()
 
   // On first load, try to restore session from token
   if (!authStore.isAuthenticated && authStore.token) {
     await authStore.fetchUser()
+  }
+
+  // Clear store filters when leaving the tickets page
+  if (from.name === 'tickets' && to.name !== 'tickets') {
+    ticketsStore.clearFilters()
   }
 
   const isAuth = authStore.isAuthenticated

@@ -21,9 +21,11 @@ const { isLoading,
         filterDateFrom,
         filterDateTo,
         filtersActive,
+        activePage,
+        activeTotalPages,
         } = storeToRefs(store);
 
-const { fetchTickets, clearFilters } = store
+const { fetchTickets, clearFilters, goToPage } = store
 const { sortBy, sortDir, toggleSort, sortedItems: sortedTickets } = useSorting(currentPageTickets)
 
 function onStatusChange(ticket, status) {
@@ -32,22 +34,19 @@ function onStatusChange(ticket, status) {
 
 let skipNextWatch = false
 onMounted(() => {
-    const hadFilters = !!(filterStatus.value || filterCategory.value || filterDateFrom.value || filterDateTo.value)
-    if (hadFilters) skipNextWatch = true
-    clearFilters()
+    if (filtersActive.value) {
+        skipNextWatch = true
+        clearFilters()
+    }
     if (!fetched.value) fetchTickets()
 })
 
 watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
-    if (skipNextWatch) {
-        skipNextWatch = false
-        return
-    }
-    if (filtersActive.value && !fetchedAll.value) {
-        fetchTickets()
-    }
-    // if fetchedAll: in-memory filter via computed, no fetch
-    // if filters cleared: clearFilters() already snapped currentPage
+    if (skipNextWatch) { skipNextWatch = false; return }
+    // reset filtered pagination and wipe filtered cache so we fetch fresh from page 1
+    store.currentFilteredPage = 1
+    store.filteredTickets = {}
+    if (!fetchedAll.value) fetchTickets()
 })
 
 </script>
@@ -84,11 +83,11 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
                 </button>
             </div>
             <div class="paginator">
-                <button class="double-previous-btn"><ChevronsLeft /></button>
-                <button class="previous-btn"><ChevronLeft /></button>
-                <span class="page">page: 3 of 7</span>
-                <button class="next-btn"><ChevronRight /></button>
-                <button class="double-next-btn"><ChevronsRight /></button>
+                <button class="double-previous-btn" :disabled="activePage <= 1" @click="goToPage(1)"><ChevronsLeft /></button>
+                <button class="previous-btn" :disabled="activePage <= 1" @click="goToPage(activePage - 1)"><ChevronLeft /></button>
+                <span class="page">{{ activePage }} of {{ activeTotalPages }}</span>
+                <button class="next-btn" :disabled="activePage >= activeTotalPages" @click="goToPage(activePage + 1)"><ChevronRight /></button>
+                <button class="double-next-btn" :disabled="activePage >= activeTotalPages" @click="goToPage(activeTotalPages)"><ChevronsRight /></button>
             </div>
         </div>
 
@@ -269,6 +268,11 @@ watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
             justify-content: center;
             align-items: center;
             cursor: pointer;
+
+            &:disabled {
+                opacity: 0.35;
+                cursor: not-allowed;
+            }
         }
     }
 }
