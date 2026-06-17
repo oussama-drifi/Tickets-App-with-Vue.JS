@@ -15,6 +15,7 @@ import { RouterView } from 'vue-router';
     min-width: 0;
     margin-left: 12px;
     max-height: 100%;
+    padding-right: 10px;
     overflow-y: auto;
     transition: flex-basis 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

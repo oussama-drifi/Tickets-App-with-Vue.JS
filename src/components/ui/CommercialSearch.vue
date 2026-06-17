@@ -151,7 +151,7 @@ onBeforeUnmount(cancelFetch)
 .commercial-search {
     position: relative;
     width: 300px;
-    background-color: red;
+    
 }
 
 .search-input-wrapper {

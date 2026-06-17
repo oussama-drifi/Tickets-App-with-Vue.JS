@@ -1,6 +1,6 @@
 <script setup>
 
-import { X } from '@lucide/vue';
+import { ImageOff, X } from '@lucide/vue';
 
 defineProps({
     open: Boolean,
@@ -35,6 +35,7 @@ const emit = defineEmits(['close'])
                             <img v-if="image" :src="image" alt="Ticket image" class="modal-image" />
                             <div v-else class="modal-no-image">
                                 <i class="bi bi-image"></i>
+                                <ImageOff size="25"/>
                                 <span>No image available</span>
                             </div>
                         </div>
