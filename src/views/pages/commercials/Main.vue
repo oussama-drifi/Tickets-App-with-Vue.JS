@@ -6,6 +6,7 @@ import NavBar from '@/components/layout/NavBar.vue'
 import CommercialSearch from '@/components/ui/CommercialSearch.vue'
 import NewCommercial from '@/components/commercials/NewCommercial.vue'
 import { RouterView } from 'vue-router'
+import { UserPlus } from '@lucide/vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -54,7 +55,7 @@ const commercialPageLinks = [
         </div>
         <div class="toolbar-right">
             <button class="add-new-btn" @click="drawerOpen = true">
-                <i class="bi bi-plus-lg"></i> add New
+                <UserPlus size="15"/> add new
             </button>
         </div>
     </div>
@@ -88,13 +89,12 @@ const commercialPageLinks = [
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
+    padding: 7px 16px;
     background-color: var(--primary);
     color: var(--bg);
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 16px;
-    font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s;
     font-family: inherit;

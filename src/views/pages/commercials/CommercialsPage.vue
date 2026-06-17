@@ -67,14 +67,15 @@ watch([filterSearch, filterStatus], () => {
 
 .search-input {
     background-color: var(--surface);
-    border: 2px solid var(--border);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 10px 14px;
+    padding: 7px 14px;
     outline: none;
     color: var(--text);
     font-size: 14px;
     font-family: inherit;
     transition: border-color 0.2s;
+    width: 300px;
 }
 
 .search-input:focus {

@@ -5,18 +5,13 @@ import { RouterView } from 'vue-router';
 const cardsPageLinks = [
     {
         icon: "bi bi-card-list",
-        label: "all",
+        label: "commercial cards",
         path: "all"
     },
     {
         icon: "bi bi-ui-checks-grid",
         label: "categories",
         path: "categories"
-    },
-    {
-        icon: "bi bi-currency-dollar",
-        label: "payments",
-        path: "payments"
     }
 ]
 </script>
