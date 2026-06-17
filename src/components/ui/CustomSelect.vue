@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ChevronsUpDown } from '@lucide/vue'
 
 const props = defineProps({
     options: { type: Array, required: true },
@@ -44,7 +45,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
     <div class="custom-select" ref="selectRef">
         <button class="custom-select-trigger" @click="toggleDropdown">
             <span>{{ selectedLabel }}</span>
-            <i class="bi bi-chevron-down" :class="{ rotated: isOpen }"></i>
+            <ChevronsUpDown size="15"/>
         </button>
         <ul :class="`custom-select-options ${isOpen ? 'shown' : ''}`">
             <li
@@ -63,7 +64,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 <style scoped>
 .custom-select {
     position: relative;
-    width: 300px;
+    width: 250px;
 }
 
 .custom-select-trigger {
@@ -72,7 +73,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
     justify-content: space-between;
     gap: 10px;
     width: 100%;
-    padding: 10px 14px;
+    padding: 7px 14px;
     background-color: var(--surface);
     border: 2px solid var(--border);
     border-radius: 8px;
@@ -128,9 +129,9 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 }
 
 .custom-select-option:hover {
-    background-color: var(--border);
+    background-color: var(--bg);
 }
 .custom-select-option.selected {
-    background-color: var(--border);
+    background-color: var(--bg);
 }
 </style>
