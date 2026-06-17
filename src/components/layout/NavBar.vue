@@ -25,7 +25,7 @@ defineProps({
 <style scoped>
 .nav-bar {
     width: fit-content;
-    border-radius: 80px;
+    border-radius: 10px;
     padding: 2px;
     display: flex;
     border: 1px solid var(--border);
@@ -38,13 +38,13 @@ defineProps({
     border: 5px;
     font-weight: 600;
     color: var(--text-muted);
-    border-radius: 40px;
+    border-radius: 8px;
     position: relative;
+    color: var(--text-extra-muted);
 
     &.router-link-active {
         color: var(--primary);
         background-color: var(--active);
-        border: 1px solid var(--primary);
     }
 }
 </style>
