@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCommercialsStore } from '@/stores/commercials'
 import { storeToRefs } from 'pinia'
+import { UserRoundX } from '@lucide/vue'
 
 const commercialsStore = useCommercialsStore()
 const router = useRouter()
@@ -53,6 +54,7 @@ onMounted(() => {
     <!-- Empty state -->
     <div v-else-if="!filteredCommercials.length" class="empty-state">
         <i class="bi bi-person-x"></i>
+        <UserRoundX size="45"/>
         <p>No commercials found</p>
     </div>
 
@@ -271,8 +273,9 @@ onMounted(() => {
     gap: 12px;
     color: var(--text-muted);
     opacity: 0.6;
-    background-color: #fff5ee;
-    border: 2px solid var(--border);
+    background-color: var(--surface);
+    border: 4px dashed var(--border);
+    border-radius: 15px;
 }
 
 .empty-state i {

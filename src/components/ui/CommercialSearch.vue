@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { adminApi } from '@/services/api'
+import { Search, X } from '@lucide/vue'
 
 const props = defineProps({
     modelValue: { type: [Number, null], default: null },
@@ -108,18 +109,18 @@ onBeforeUnmount(cancelFetch)
 <template>
     <div class="commercial-search" ref="wrapperRef" @focusout="onFocusOut">
         <div class="search-input-wrapper">
-            <i class="bi bi-search search-icon"></i>
+            <Search size="15"/>
             <input
                 v-model="query"
                 :placeholder="placeholder"
                 @focus="onFocus"
                 autocomplete="off"
             />
-            <i
+            <X 
                 v-if="selectedLabel || query"
-                class="bi bi-x-lg"
+                size="15"
                 @click="clear"
-            ></i>
+            />
         </div>
 
         <Transition name="dropdown">
@@ -150,6 +151,7 @@ onBeforeUnmount(cancelFetch)
 .commercial-search {
     position: relative;
     width: 300px;
+    background-color: red;
 }
 
 .search-input-wrapper {

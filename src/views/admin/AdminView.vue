@@ -13,8 +13,6 @@ import Aside from '@/components/layout/Aside.vue';
 <style scoped>
 
 .main-container {
-    /* display: flex;
-    justify-content: space-between; */
     height: 100%;
     display: grid;
     grid-template-columns: auto 1fr;
