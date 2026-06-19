@@ -6,7 +6,7 @@ import NavBar from '@/components/layout/NavBar.vue'
 import CommercialSearch from '@/components/ui/CommercialSearch.vue'
 import NewCommercial from '@/components/commercials/NewCommercial.vue'
 import { RouterView } from 'vue-router'
-import { UserPlus } from '@lucide/vue'
+import { UserPlus, X } from '@lucide/vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -70,7 +70,7 @@ const commercialPageLinks = [
     <Transition name="slide">
         <div v-if="drawerOpen" class="drawer">
             <button class="drawer-close" @click="drawerOpen = false">
-                <i class="bi bi-x-lg"></i>
+                <X size="30"/>
             </button>
             <NewCommercial @created="onCommercialCreated" />
         </div>
