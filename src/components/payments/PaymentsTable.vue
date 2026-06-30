@@ -102,8 +102,15 @@ function hasActions(p) { return canApprove(p) || canReject(p) || canCancel(p) }
         </table>
     </div>
 
+    <!-- Empty state -->
+    <div v-else-if="!payments.length" class="empty-state">
+        <i class="bi bi-credit-card"></i>
+        <p>No payments found</p>
+    </div>
+
     <!-- Data table -->
     <div v-else ref="tableWrapper" class="table-wrapper" :class="{ resizing }">
+
         <table class="payments-table">
             <thead>
                 <tr>
@@ -460,6 +467,29 @@ function hasActions(p) { return canApprove(p) || canReject(p) || canCancel(p) }
 [data-theme="dark"] .action-btn.reject  { background: rgba(239,68,68,0.1); border-color: #7F1D1D; color: #FCA5A5; }
 [data-theme="dark"] .action-btn.cancel  { background: var(--bg); border-color: var(--border); color: var(--text-muted); }
 [data-theme="dark"] .action-btn.cancel:not(:disabled):hover { background: rgba(239,68,68,0.1); border-color: #7F1D1D; color: #FCA5A5; }
+
+/* ---- Empty state ---- */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 12px;
+    color: var(--text-muted);
+    opacity: 0.5;
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+
+    i { font-size: 36px; }
+
+    p {
+        font-size: 14px;
+        font-weight: 500;
+        margin: 0;
+    }
+}
 
 /* ---- Skeleton ---- */
 .skeleton {

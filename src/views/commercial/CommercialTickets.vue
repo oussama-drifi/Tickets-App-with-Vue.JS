@@ -7,6 +7,7 @@ import TicketCard from '@/components/tickets/TicketCard.vue'
 import ImageModal from '@/components/ui/ImageModal.vue'
 import StatusFilter from '@/components/ui/StatusFilter.vue'
 import CategoryFilter from '@/components/ui/CategoryFilter.vue'
+import PaymentModal from '@/components/commercial/PaymentModal.vue'
 
 const PAGE_SIZE = 5
 
@@ -106,6 +107,36 @@ function closeModal() {
     modalOpen.value = false
 }
 
+// Payment modal state
+const payModalOpen = ref(false)
+const payingTicket = ref(null)
+
+function openPayModal(ticket) {
+    payingTicket.value = ticket
+    payModalOpen.value = true
+}
+
+function onPaid(ticketId) {
+    // Update status locally so the Pay button disappears immediately
+    const ticket = tickets.value.find(t => t.id === ticketId)
+    if (ticket) ticket.status = 'paid'
+}
+
+// Payment modal state
+const payModalOpen = ref(false)
+const payingTicket = ref(null)
+
+function openPayModal(ticket) {
+    payingTicket.value = ticket
+    payModalOpen.value = true
+}
+
+function onPaid(ticketId) {
+    // Update the ticket status locally so the Pay button disappears immediately
+    const ticket = tickets.value.find(t => t.id === ticketId)
+    if (ticket) ticket.status = 'paid'
+}
+
 watch([filterStatus, filterCategory, filterDateFrom, filterDateTo], () => {
     fetchTickets()
 })
@@ -172,6 +203,7 @@ onMounted(() => fetchTickets())
                 :key="ticket.id"
                 :ticket="ticket"
                 @image-click="openImageModal(ticket)"
+                @pay="openPayModal(ticket)"
             />
             <!-- Loading more skeletons -->
             <template v-if="loadingMore">
@@ -217,6 +249,13 @@ onMounted(() => fetchTickets())
         :image="modalImage"
         :description="modalDescription"
         @close="closeModal"
+    />
+
+    <PaymentModal
+        :open="payModalOpen"
+        :ticket="payingTicket"
+        @close="payModalOpen = false"
+        @paid="onPaid"
     />
 </template>
 

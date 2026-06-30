@@ -7,7 +7,7 @@ defineProps({
     },
 })
 
-const emit = defineEmits(['image-click'])
+const emit = defineEmits(['image-click', 'pay'])
 
 const categoryIcon = {
     restaurant: Utensils,
@@ -54,6 +54,9 @@ function formatDate(dateStr) {
                 </span>
             </div>
         </div>
+        <button v-if="ticket.status === 'verified'" class="pay-btn" @click="emit('pay')">
+            <i class="bi bi-credit-card"></i> Pay
+        </button>
     </div>
 </template>
 
@@ -193,4 +196,28 @@ function formatDate(dateStr) {
 [data-theme="dark"] .verified.status-badge { color: #93C5FD; border-color: #1E3A5F; background: rgba(59, 130, 246, 0.1); }
 [data-theme="dark"] .paid.status-badge { color: #86EFAC; border-color: #14532D; background: rgba(34, 197, 94, 0.1); }
 [data-theme="dark"] .rejected.status-badge { color: #FCA5A5; border-color: #7F1D1D; background: rgba(239, 68, 68, 0.1); }
+
+/* ---- Pay Button ---- */
+.pay-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 9px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s;
+}
+
+.pay-btn:hover {
+    opacity: 0.88;
+}
 </style>
