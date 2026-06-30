@@ -11,7 +11,7 @@ const props = defineProps({
 
 const emit = defineEmits(['approve', 'reject', 'cancel'])
 
-// Track in-flight actions per payment id to prevent double-clicks
+// Per-row action loading state to prevent double-clicks
 const actionLoading = ref({})
 
 async function handleAction(action, payment) {
@@ -31,12 +31,12 @@ const columnWidths = ref({
     method: 100,
     label: null,
     amount: 120,
-    status: 140,
+    status: 145,
     payer: null,
     ticket: null,
     card: null,
     date: 170,
-    actions: 190,
+    actions: 195,
 })
 
 function onResizeStart(col, e) {
@@ -44,7 +44,6 @@ function onResizeStart(col, e) {
     const startX = e.clientX
     const th = e.target.closest('th')
     const startWidth = th.offsetWidth
-
     function onMouseMove(e) {
         columnWidths.value[col] = Math.max(60, startWidth + (e.clientX - startX))
     }
@@ -53,7 +52,6 @@ function onResizeStart(col, e) {
         document.removeEventListener('mouseup', onMouseUp)
         resizing.value = null
     }
-
     resizing.value = col
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onMouseUp)
@@ -68,6 +66,7 @@ function colStyle(col) {
 function canApprove(p) { return p.method === 'cash' && p.status === 'in_review' }
 function canReject(p)  { return p.method === 'cash' && p.status === 'in_review' }
 function canCancel(p)  { return p.status === 'success' }
+function hasActions(p) { return canApprove(p) || canReject(p) || canCancel(p) }
 </script>
 
 <template>
@@ -121,6 +120,7 @@ function canCancel(p)  { return p.status === 'success' }
             </thead>
             <tbody>
                 <tr v-for="payment in payments" :key="payment.id">
+
                     <!-- Method -->
                     <td>
                         <span class="method-badge" :class="payment.method">
@@ -187,9 +187,9 @@ function canCancel(p)  { return p.status === 'success' }
                                 class="action-btn approve"
                                 :disabled="!!actionLoading[payment.id]"
                                 @click="handleAction('approve', payment)"
-                                title="Approve payment"
+                                title="Approve cash payment"
                             >
-                                <CheckCircle size="14" />
+                                <CheckCircle size="13" />
                                 {{ actionLoading[payment.id] === 'approve' ? '...' : 'Approve' }}
                             </button>
                             <button
@@ -197,9 +197,9 @@ function canCancel(p)  { return p.status === 'success' }
                                 class="action-btn reject"
                                 :disabled="!!actionLoading[payment.id]"
                                 @click="handleAction('reject', payment)"
-                                title="Reject payment"
+                                title="Reject cash payment"
                             >
-                                <XCircle size="14" />
+                                <XCircle size="13" />
                                 {{ actionLoading[payment.id] === 'reject' ? '...' : 'Reject' }}
                             </button>
                             <button
@@ -207,12 +207,12 @@ function canCancel(p)  { return p.status === 'success' }
                                 class="action-btn cancel"
                                 :disabled="!!actionLoading[payment.id]"
                                 @click="handleAction('cancel', payment)"
-                                title="Cancel payment"
+                                title="Cancel successful payment"
                             >
-                                <Ban size="14" />
+                                <Ban size="13" />
                                 {{ actionLoading[payment.id] === 'cancel' ? '...' : 'Cancel' }}
                             </button>
-                            <span v-if="!canApprove(payment) && !canReject(payment) && !canCancel(payment)" class="muted no-action">—</span>
+                            <span v-if="!hasActions(payment)" class="muted">—</span>
                         </div>
                     </td>
                 </tr>
@@ -305,7 +305,7 @@ function canCancel(p)  { return p.status === 'success' }
     opacity: 0.4;
 }
 
-/* ---- Cells ---- */
+/* ---- Generic cells ---- */
 .cell-text {
     display: block;
     overflow: hidden;
@@ -348,10 +348,10 @@ function canCancel(p)  { return p.status === 'success' }
     font-size: 12px;
     font-weight: 600;
     text-transform: capitalize;
-    border: 1px solid var(--border);
+    border: 1px solid transparent;
 }
-.method-badge.card   { color: #1D4ED8; background: #EFF6FF; border-color: #BFDBFE; }
-.method-badge.cash   { color: #15803D; background: #F0FDF4; border-color: #BBF7D0; }
+.method-badge.card { color: #1D4ED8; background: #EFF6FF; border-color: #BFDBFE; }
+.method-badge.cash { color: #15803D; background: #F0FDF4; border-color: #BBF7D0; }
 [data-theme="dark"] .method-badge.card { color: #93C5FD; background: rgba(59,130,246,0.1); border-color: #1E3A5F; }
 [data-theme="dark"] .method-badge.cash { color: #86EFAC; background: rgba(34,197,94,0.1);  border-color: #14532D; }
 
@@ -363,7 +363,7 @@ function canCancel(p)  { return p.status === 'success' }
     font-size: 12px;
     font-weight: 600;
     text-transform: capitalize;
-    border: 1px solid var(--border);
+    border: 1px solid transparent;
 }
 .status-badge.in_review  { color: #B45309; background: #FFFBEB; border-color: #FDE68A; }
 .status-badge.success    { color: #15803D; background: #F0FDF4; border-color: #BBF7D0; }
@@ -380,7 +380,7 @@ function canCancel(p)  { return p.status === 'success' }
     flex-direction: column;
     gap: 1px;
 }
-.payer-name  { font-size: 13px; font-weight: 500; color: var(--text); }
+.payer-name  { font-size: 13px; font-weight: 500; }
 .payer-email { font-size: 11px; color: var(--text-muted); opacity: 0.6; }
 
 /* ---- Ticket cell ---- */
@@ -431,7 +431,7 @@ function canCancel(p)  { return p.status === 'success' }
 .action-btn {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     padding: 5px 10px;
     border-radius: 7px;
     border: 1px solid transparent;
@@ -447,59 +447,19 @@ function canCancel(p)  { return p.status === 'success' }
     cursor: not-allowed;
 }
 
-.action-btn.approve {
-    background: #F0FDF4;
-    border-color: #BBF7D0;
-    color: #15803D;
-}
-.action-btn.approve:not(:disabled):hover {
-    background: #DCFCE7;
-    border-color: #86EFAC;
-}
+.action-btn.approve { background: #F0FDF4; border-color: #BBF7D0; color: #15803D; }
+.action-btn.approve:not(:disabled):hover { background: #DCFCE7; border-color: #86EFAC; }
 
-.action-btn.reject {
-    background: #FEF2F2;
-    border-color: #FECACA;
-    color: #B91C1C;
-}
-.action-btn.reject:not(:disabled):hover {
-    background: #FEE2E2;
-    border-color: #FCA5A5;
-}
+.action-btn.reject { background: #FEF2F2; border-color: #FECACA; color: #B91C1C; }
+.action-btn.reject:not(:disabled):hover { background: #FEE2E2; border-color: #FCA5A5; }
 
-.action-btn.cancel {
-    background: var(--bg);
-    border-color: var(--border);
-    color: var(--text-muted);
-}
-.action-btn.cancel:not(:disabled):hover {
-    background: #FEF2F2;
-    border-color: #FECACA;
-    color: #B91C1C;
-}
+.action-btn.cancel { background: var(--bg); border-color: var(--border); color: var(--text-muted); }
+.action-btn.cancel:not(:disabled):hover { background: #FEF2F2; border-color: #FECACA; color: #B91C1C; }
 
-[data-theme="dark"] .action-btn.approve {
-    background: rgba(34,197,94,0.1);
-    border-color: #14532D;
-    color: #86EFAC;
-}
-[data-theme="dark"] .action-btn.reject {
-    background: rgba(239,68,68,0.1);
-    border-color: #7F1D1D;
-    color: #FCA5A5;
-}
-[data-theme="dark"] .action-btn.cancel {
-    background: var(--bg);
-    border-color: var(--border);
-    color: var(--text-muted);
-}
-[data-theme="dark"] .action-btn.cancel:not(:disabled):hover {
-    background: rgba(239,68,68,0.1);
-    border-color: #7F1D1D;
-    color: #FCA5A5;
-}
-
-.no-action { font-size: 13px; }
+[data-theme="dark"] .action-btn.approve { background: rgba(34,197,94,0.1);  border-color: #14532D; color: #86EFAC; }
+[data-theme="dark"] .action-btn.reject  { background: rgba(239,68,68,0.1); border-color: #7F1D1D; color: #FCA5A5; }
+[data-theme="dark"] .action-btn.cancel  { background: var(--bg); border-color: var(--border); color: var(--text-muted); }
+[data-theme="dark"] .action-btn.cancel:not(:disabled):hover { background: rgba(239,68,68,0.1); border-color: #7F1D1D; color: #FCA5A5; }
 
 /* ---- Skeleton ---- */
 .skeleton {
